@@ -59,6 +59,7 @@ const MAX_UNITS_PER_PAYMENT = 1000;
 const today = () => new Date().toISOString().slice(0, 10);
 
 export class Facilitator {
+  private payoutRunning = false;
   private publishChain: Promise<unknown> = Promise.resolve();
 
   private constructor(
@@ -505,6 +506,87 @@ export class Facilitator {
     }
     this.bumpIssued(key.epoch, "exchange", sigs.length);
     return { epoch: key.epoch, publicKey: key.publicKeyB64, blindSigs: sigs };
+  }
+
+  // ---------------------------------------------------------------- payout
+
+  /** Pay every merchant its pending balance (plus queued refunds) in batched HTS transfers. */
+  async payout(): Promise<{ batches: { batchId: string; transactionId: string; merchants: number; totalUnits: number }[] } | null> {
+    if (this.payoutRunning) return null;
+    this.payoutRunning = true;
+    try {
+      await this.flushIssued();
+      const merchants = this.db.tx(() => {
+        const rows = this.db.db.prepare("SELECT id, account, pending_units FROM merchants WHERE pending_units > 0").all() as {
+          id: string;
+          account: string;
+          pending_units: number;
+        }[];
+        const dec = this.db.db.prepare("UPDATE merchants SET pending_units = pending_units - ? WHERE id = ?");
+        for (const m of rows) dec.run(m.pending_units, m.id);
+        return rows;
+      });
+      const refunds = this.db.db.prepare("SELECT tx_id, account, amount_base FROM deposits WHERE status = 'refund_pending'").all() as {
+        tx_id: string;
+        account: string;
+        amount_base: string;
+      }[];
+
+      type Credit = { kind: "merchant"; id: string; account: string; units: number } | { kind: "refund"; txId: string; account: string; amount: bigint };
+      const credits: Credit[] = [
+        ...merchants.map((m) => ({ kind: "merchant" as const, id: m.id, account: m.account, units: m.pending_units })),
+        ...refunds.map((r) => ({ kind: "refund" as const, txId: r.tx_id, account: r.account, amount: BigInt(r.amount_base) })),
+      ];
+      if (credits.length === 0) return { batches: [] };
+
+      const batches = [];
+      for (let i = 0; i < credits.length; i += CREDITS_PER_TRANSFER) {
+        const chunk = credits.slice(i, i + CREDITS_PER_TRANSFER);
+        const batchId = `${new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14)}-${toHex(randomBytes(3))}`;
+        const transfers = chunk.map((c) => ({ account: c.account, amount: c.kind === "merchant" ? BigInt(c.units) * UNIT_VALUE_BASE : c.amount }));
+        let transactionId: string;
+        try {
+          ({ transactionId } = await this.backend.transferToken(this.ids.token, this.ids.treasury, transfers, `hexera payout ${batchId}`));
+        } catch (e) {
+          // Put the units back so the next run retries.
+          for (const c of chunk) if (c.kind === "merchant") this.db.db.prepare("UPDATE merchants SET pending_units = pending_units + ? WHERE id = ?").run(c.units, c.id);
+          this.log.error(`payout batch ${batchId} failed: ${(e as Error).message}`);
+          continue;
+        }
+        const ms = chunk.filter((c): c is Extract<Credit, { kind: "merchant" }> => c.kind === "merchant");
+        const summary: PayoutMessage = {
+          t: "payout",
+          v: 1,
+          batchId,
+          transactionId,
+          merchants: ms.map((m) => ({ merchant: m.id, account: m.account, units: m.units, amountBase: (BigInt(m.units) * UNIT_VALUE_BASE).toString() })),
+          totalUnits: ms.reduce((a, m) => a + m.units, 0),
+        };
+        this.db.tx(() => {
+          for (const m of ms) this.db.db.prepare("UPDATE merchants SET paid_units = paid_units + ? WHERE id = ?").run(m.units, m.id);
+          for (const c of chunk) if (c.kind === "refund") this.db.db.prepare("UPDATE deposits SET status = 'refunded' WHERE tx_id = ?").run(c.txId);
+          this.db.db.prepare("INSERT INTO payouts (batch_id, tx_id, summary, created_at) VALUES (?, ?, ?, ?)").run(batchId, transactionId, JSON.stringify(summary), Date.now());
+        });
+        const nRefunds = chunk.length - ms.length;
+        this.log.info(`payout ${batchId}: ${ms.length} merchant(s), ${summary.totalUnits} unit(s)${nRefunds ? `, ${nRefunds} refund(s)` : ""} -> tx ${transactionId}`);
+        if (ms.length) await this.publishLedger(summary);
+        batches.push({ batchId, transactionId, merchants: ms.length, totalUnits: summary.totalUnits });
+      }
+      return { batches };
+    } finally {
+      this.payoutRunning = false;
+    }
+  }
+
+  /** Publish issued-voucher counts (batched, so issuance timing isn't broadcast per user). */
+  private async flushIssued() {
+    const rows = this.db.db.prepare("SELECT k, v FROM kv WHERE k LIKE 'issued_unpublished:%' AND v != '0'").all() as { k: string; v: string }[];
+    for (const row of rows) {
+      const [, epoch, reason] = row.k.split(":");
+      const msg: IssuedMessage = { t: "issued", v: 1, epoch: Number(epoch), units: Number(row.v), reason: reason as "deposit" | "exchange" };
+      this.db.set(row.k, "0");
+      await this.publishLedger(msg);
+    }
   }
 
   // ------------------------------------------------------------------ sync

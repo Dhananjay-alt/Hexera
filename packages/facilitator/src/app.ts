@@ -48,6 +48,12 @@ export async function buildApp(f: Facilitator, opts: { logger?: boolean } = {}):
     return f.settle(b?.paymentPayload, b?.paymentRequirements);
   });
 
+  // ---- operator ----
+  app.post("/payout", async (req) => {
+    requireAdmin(req.headers.authorization);
+    return f.payout();
+  });
+
   // ---- local mode: mirror-node shaped reads + test wallet ----
   const local = f.local;
   if (local) {
