@@ -29,7 +29,7 @@ export function WorldIdButton({ mode, appId, action, signal, devHuman, proof, on
           <ShieldCheck size={14} />
           Proof of Human verified{proof.mode === "dev" ? " · simulator" : ""}
         </span>
-        <button className="btn btn-secondary" style={{ height: 26, padding: "0 8px" }} onClick={() => onProof(null)} aria-label="Clear World ID proof">
+        <button suppressHydrationWarning className="btn btn-secondary" style={{ height: 26, padding: "0 8px" }} onClick={() => onProof(null)} aria-label="Clear World ID proof">
           <X size={12} />
         </button>
       </div>
@@ -39,7 +39,7 @@ export function WorldIdButton({ mode, appId, action, signal, devHuman, proof, on
   if (mode === "dev") {
     return (
       <div className="field">
-        <button className="btn btn-outline btn-block" onClick={() => onProof({ mode: "dev", human: devHuman, signal })}>
+        <button suppressHydrationWarning className="btn btn-outline btn-block" onClick={() => onProof({ mode: "dev", human: devHuman, signal })}>
           <Fingerprint size={14} />
           Verify with World ID (dev simulator)
         </button>
@@ -59,7 +59,7 @@ export function WorldIdButton({ mode, appId, action, signal, devHuman, proof, on
 
   return (
     <div className="field">
-      <button className="btn btn-outline btn-block" onClick={start}>
+      <button suppressHydrationWarning className="btn btn-outline btn-block" onClick={start}>
         <Fingerprint size={14} />
         Verify with World ID
       </button>

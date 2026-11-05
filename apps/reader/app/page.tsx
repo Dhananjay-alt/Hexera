@@ -60,6 +60,8 @@ const USERS = [
 
 const usdcOfUnits = (n: number) => formatUsdc(BigInt(n) * 1000n);
 
+// Form controls carry suppressHydrationWarning: autofill / form-filler extensions (e.g. ones that add
+// `fdprocessedid`) modify inputs before React hydrates. It only silences attribute diffs on that element.
 export default function Reader() {
   const [info, setInfo] = useState<SupportedInfo | null>(null);
   const [pubs, setPubs] = useState<Catalogue[]>([]);
@@ -248,9 +250,9 @@ export default function Reader() {
               <article className="card">
                 <div className="article">
                   <nav className="breadcrumb" aria-label="Breadcrumb">
-                    <button onClick={() => setOpened(null)}>Publishers</button>
+                    <button suppressHydrationWarning onClick={() => setOpened(null)}>Publishers</button>
                     <ChevronRight size={14} />
-                    <button onClick={() => setOpened(null)}>{opened.pub.name}</button>
+                    <button suppressHydrationWarning onClick={() => setOpened(null)}>{opened.pub.name}</button>
                     <ChevronRight size={14} />
                     <span className="current">{opened.meta.title}</span>
                   </nav>
@@ -319,7 +321,7 @@ export default function Reader() {
                   <ul className="article-list">
                     {p.articles.map((a) => (
                       <li key={a.slug}>
-                        <button className="article-row" onClick={() => open(p, a)} disabled={!info}>
+                        <button suppressHydrationWarning className="article-row" onClick={() => open(p, a)} disabled={!info}>
                           <span className="article-title">{a.title}</span>
                           <span className="article-teaser">{a.teaser}</span>
                           <span className="article-meta">
@@ -363,7 +365,7 @@ export default function Reader() {
                 <div className="divider" />
                 <label className="field">
                   <span className="field-label">Demo account</span>
-                  <select className="select" value={user} onChange={(e) => setUser(e.target.value as "1" | "2")}>
+                  <select suppressHydrationWarning className="select" value={user} onChange={(e) => setUser(e.target.value as "1" | "2")}>
                     {USERS.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.label}
@@ -375,7 +377,7 @@ export default function Reader() {
                 <label className="field">
                   <span className="field-label">Deposit</span>
                   <span className="input-suffix">
-                    <input className="input" value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
+                    <input suppressHydrationWarning className="input" value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
                     <span>USDC</span>
                   </span>
                   {info && amountBase > freeLimit && (
@@ -395,7 +397,7 @@ export default function Reader() {
                     onProof={setProof}
                   />
                 )}
-                <button className="btn btn-primary btn-block" onClick={deposit} disabled={!!busy || !info || !account}>
+                <button suppressHydrationWarning className="btn btn-primary btn-block" onClick={deposit} disabled={!!busy || !info || !account}>
                   {busy ? (
                     <>
                       <Loader2 size={14} className="spin" />
