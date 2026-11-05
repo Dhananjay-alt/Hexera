@@ -10,6 +10,7 @@
  */
 import { RSABSSA } from "@cloudflare/blindrsa-ts";
 import { fromBase64, randomBytes, sha256Hex, toBase64, toHex, fromHex } from "./bytes";
+import { fastBlind, fastFinalize, rsaPublicParams, type RsaPublicParams } from "./fastblind";
 
 const suite = () => RSABSSA.SHA384.PSS.Randomized();
 
@@ -60,10 +61,26 @@ export interface BlindedVoucher {
   inv: string;
 }
 
-export async function blindNewVoucher(publicKey: CryptoKey): Promise<BlindedVoucher> {
+const paramsCache = new WeakMap<CryptoKey, Promise<RsaPublicParams>>();
+function params(publicKey: CryptoKey): Promise<RsaPublicParams> {
+  let p = paramsCache.get(publicKey);
+  if (!p) paramsCache.set(publicKey, (p = rsaPublicParams(publicKey)));
+  return p;
+}
+
+/**
+ * Make a fresh random serial and blind it. Uses the native-BigInt Blind
+ * (fastblind.ts) by default; pass `useLibrary` to use blindrsa-ts instead.
+ */
+export async function blindNewVoucher(publicKey: CryptoKey, useLibrary = false): Promise<BlindedVoucher> {
   const s = suite();
   const prepared = s.prepare(randomBytes(32));
-  const { blindedMsg, inv } = await s.blind(publicKey, prepared);
+  let blindedMsg: Uint8Array, inv: Uint8Array;
+  if (useLibrary) {
+    ({ blindedMsg, inv } = await s.blind(publicKey, prepared));
+  } else {
+    ({ blindedMsg, inv } = await fastBlind(await params(publicKey), prepared));
+  }
   return { serial: toHex(prepared), blindedMsg: toBase64(blindedMsg), inv: toBase64(inv) };
 }
 
@@ -78,12 +95,8 @@ export async function finalizeVoucher(
   blinded: BlindedVoucher,
   blindSigB64: string,
 ): Promise<string> {
-  const sig = await suite().finalize(
-    publicKey,
-    fromHex(blinded.serial),
-    fromBase64(blindSigB64),
-    fromBase64(blinded.inv),
-  );
+  const p = await params(publicKey);
+  const sig = await fastFinalize(p, publicKey, fromHex(blinded.serial), fromBase64(blindSigB64), fromBase64(blinded.inv));
   return toBase64(sig);
 }
 

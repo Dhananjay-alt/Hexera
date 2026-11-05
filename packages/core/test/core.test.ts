@@ -12,7 +12,11 @@ import {
   importPublicKey,
   isVoucher,
   verifyVoucherSig,
+  fromHex,
+  fromBase64,
+  toBase64,
 } from "../src/index";
+import { RSABSSA } from "@cloudflare/blindrsa-ts";
 
 test("blind RSA voucher round trip (RFC 9474)", async () => {
   const kp = await generateEpochKey(1);
@@ -33,6 +37,18 @@ test("blind RSA voucher round trip (RFC 9474)", async () => {
   assert.equal(await verifyVoucherSig(other.publicKey, v.serial, v.sig), false);
   // Wrong blind signature is rejected at finalize.
   await assert.rejects(finalizeVoucher(pub, b, await blindSign(other.privateKey, (await blindNewVoucher(other.publicKey)).blindedMsg)));
+});
+
+test("native-BigInt Blind interoperates with blindrsa-ts (both directions of the library)", async () => {
+  const kp = await generateEpochKey(3);
+  for (const useLibrary of [false, true, false, false]) {
+    const b = await blindNewVoucher(kp.publicKey, useLibrary);
+    const blindSig = await blindSign(kp.privateKey, b.blindedMsg);
+    const sig = await finalizeVoucher(kp.publicKey, b, blindSig); // fast path; throws if invalid
+    assert.equal(await verifyVoucherSig(kp.publicKey, b.serial, sig), true);
+    const libSig = await RSABSSA.SHA384.PSS.Randomized().finalize(kp.publicKey, fromHex(b.serial), fromBase64(blindSig), fromBase64(b.inv));
+    assert.equal(toBase64(libSig), sig, "fast finalize == library finalize");
+  }
 });
 
 test("request hash binds method, path and body", async () => {
