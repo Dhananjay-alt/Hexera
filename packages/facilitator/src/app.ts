@@ -3,6 +3,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import type { HexeraPaymentPayload, HexeraRequirements } from "@hexera/core";
 import { HttpError } from "./errors";
 import type { Facilitator } from "./service";
+import { rpContext } from "./worldid";
 
 export async function buildApp(f: Facilitator, opts: { logger?: boolean } = {}): Promise<FastifyInstance> {
   const app = Fastify({ logger: opts.logger ?? false, bodyLimit: 2 * 1024 * 1024 });
@@ -26,8 +27,15 @@ export async function buildApp(f: Facilitator, opts: { logger?: boolean } = {}):
   app.get("/books", async () => f.books());
 
   // ---- client ----
+  app.post("/deposit/check", async (req) => f.depositCheck(req.body as Parameters<Facilitator["depositCheck"]>[0]));
+  app.post("/deposit/verify", async (req) => f.depositVerify(req.body as Parameters<Facilitator["depositVerify"]>[0]));
   app.post("/issue", async (req) => f.issue(req.body as Parameters<Facilitator["issue"]>[0]));
   app.post("/exchange", async (req) => f.exchange(req.body as Parameters<Facilitator["exchange"]>[0]));
+  app.post("/worldid/rp-context", async () => {
+    const ctx = await rpContext(f.cfg);
+    if (!ctx) throw new HttpError(404, "world_id_not_configured", "WORLD_RP_ID / WORLD_RP_SIGNING_KEY not set");
+    return { rp_context: ctx, app_id: f.cfg.worldAppId, action: f.cfg.worldAction };
+  });
 
   // ---- merchant (x402 facilitator API) ----
   type VS = { paymentPayload: HexeraPaymentPayload; paymentRequirements: HexeraRequirements };

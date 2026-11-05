@@ -29,6 +29,7 @@ import type { FacilitatorConfig } from "./config";
 import { Db } from "./db";
 import { HttpError, bad } from "./errors";
 import { EpochKeys, type EpochKey } from "./keys";
+import { verifyWorldId, WorldIdError, type WorldIdInput } from "./worldid";
 
 export interface Logger {
   info(msg: string): void;
@@ -205,6 +206,104 @@ export class Facilitator {
 
   merchants() {
     return this.db.db.prepare("SELECT id, account, name FROM merchants ORDER BY id").all() as { id: string; account: string; name: string }[];
+  }
+
+  // --------------------------------------------------------------- deposit
+
+  private depositedToday(column: "account" | "human", value: string): bigint {
+    const rows = this.db.db
+      .prepare(`SELECT amount_base FROM deposits WHERE ${column} = ? AND day = ? AND status = 'credited'`)
+      .all(value, today()) as { amount_base: string }[];
+    return rows.reduce((a, r) => a + BigInt(r.amount_base), 0n);
+  }
+
+  /**
+   * Pre-flight a deposit before the user sends money: is it within the free
+   * per-account limit, or does it need (and pass) the per-human cap?
+   */
+  async depositCheck(input: { account: string; amountBase: string; worldId?: WorldIdInput }) {
+    const amount = BigInt(input.amountBase);
+    if (amount <= 0n) throw bad("invalid_amount", "amount must be positive");
+    const acct = this.depositedToday("account", input.account);
+    const free = acct + amount <= this.cfg.freeDailyLimitBase;
+    if (!input.worldId) {
+      return free
+        ? { ok: true, needsWorldId: false }
+        : { ok: false, needsWorldId: true, reason: `deposits above ${formatUsdc(this.cfg.freeDailyLimitBase)} USDC/day need World ID` };
+    }
+    const { human } = await this.verifyHuman(input.worldId, input.account);
+    const used = this.depositedToday("human", human);
+    if (used + amount > this.cfg.humanDailyCapBase) {
+      return {
+        ok: false,
+        needsWorldId: false,
+        reason: `per-human daily cap reached: ${formatUsdc(used)} of ${formatUsdc(this.cfg.humanDailyCapBase)} USDC used today`,
+      };
+    }
+    return { ok: true, needsWorldId: false, remainingBase: (this.cfg.humanDailyCapBase - used - amount).toString() };
+  }
+
+  private async verifyHuman(worldId: WorldIdInput, account: string) {
+    try {
+      return await verifyWorldId(this.cfg, worldId, account);
+    } catch (e) {
+      if (e instanceof WorldIdError) throw new HttpError(403, "world_id_invalid", e.message);
+      throw e;
+    }
+  }
+
+  /**
+   * Check a USDC deposit on the mirror node and turn it into a one-time
+   * credit for K vouchers. The credit is the only link between deposit and
+   * issuance, and it ends at /issue: the signatures are blind.
+   */
+  async depositVerify(input: { txId: string; worldId?: WorldIdInput }) {
+    if (!input.txId || typeof input.txId !== "string") throw bad("invalid_tx", "txId required");
+    const existing = this.db.db.prepare("SELECT status FROM deposits WHERE tx_id = ?").get(input.txId) as { status: string } | undefined;
+    if (existing) throw new HttpError(409, "deposit_already_used", `deposit already ${existing.status}`);
+
+    const tx =
+      this.backend.mode === "local"
+        ? await this.backend.mirror.getTransaction(input.txId)
+        : await this.backend.mirror.waitForTransaction(input.txId);
+    if (!tx) throw new HttpError(404, "deposit_not_found", "transaction not found on mirror node");
+    if (tx.result !== "SUCCESS") throw bad("deposit_failed", `transaction result ${tx.result}`);
+
+    const transfers = (tx.token_transfers ?? []).filter((t) => t.token_id === this.ids.token);
+    const credit = transfers.filter((t) => t.account === this.ids.treasury && t.amount > 0);
+    const debits = transfers.filter((t) => t.amount < 0);
+    if (credit.length !== 1 || debits.length !== 1) throw bad("not_a_deposit", "expected one USDC transfer from one account to the Hexera treasury");
+    const amount = BigInt(credit[0].amount);
+    const account = debits[0].account;
+
+    // Spending controls: free limit per account, World ID cap per human.
+    let human: string | null = null;
+    if (input.worldId) human = (await this.verifyHuman(input.worldId, account)).human;
+    const acctToday = this.depositedToday("account", account);
+    if (!human && acctToday + amount > this.cfg.freeDailyLimitBase) {
+      throw new HttpError(403, "world_id_required", `deposits above ${formatUsdc(this.cfg.freeDailyLimitBase)} USDC/day per account need World ID; retry with a proof`);
+    }
+    if (human && this.depositedToday("human", human) + amount > this.cfg.humanDailyCapBase) {
+      this.db.db
+        .prepare("INSERT INTO deposits (tx_id, account, amount_base, day, human, status, created_at) VALUES (?, ?, ?, ?, ?, 'refund_pending', ?)")
+        .run(input.txId, account, amount.toString(), today(), human, Date.now());
+      this.log.warn(`deposit ${input.txId} refused: per-human cap reached; refund queued for next payout`);
+      throw new HttpError(403, "human_cap_exceeded", `per-human daily cap of ${formatUsdc(this.cfg.humanDailyCapBase)} USDC reached; deposit will be refunded`);
+    }
+
+    const units = Number(amount / UNIT_PRICE_BASE);
+    if (units < 1) throw bad("deposit_too_small", `minimum deposit is ${formatUsdc(UNIT_PRICE_BASE)} USDC`);
+    const token = toHex(randomBytes(32));
+    this.db.tx(() => {
+      this.db.db.prepare("INSERT INTO credits (token, units_total, created_at) VALUES (?, ?, ?)").run(token, units, Date.now());
+      this.db.db
+        .prepare("INSERT INTO deposits (tx_id, account, amount_base, day, human, status, credit, created_at) VALUES (?, ?, ?, ?, ?, 'credited', ?, ?)")
+        .run(input.txId, account, amount.toString(), today(), human, token, Date.now());
+    });
+    this.log.info(`deposit ${input.txId}: ${account} deposited ${formatUsdc(amount)} USDC -> ${units} voucher credit${human ? " (World ID verified)" : ""}`);
+    const msg: DepositMessage = { t: "deposit", v: 1, depositTx: input.txId, amountBase: amount.toString(), unitsCredited: units };
+    void this.publishLedger(msg);
+    return { credit: token, units, amountBase: amount.toString(), account };
   }
 
   // ----------------------------------------------------------------- issue
