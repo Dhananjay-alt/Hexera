@@ -5,134 +5,153 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Hexera audit — public books from HCS</title>
 <style>
-  /* Tokens and components follow DESIGN.md (monochrome, Geist, pill controls, 24px cards). */
-  @font-face { font-family: "Geist"; src: url("/fonts/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
-  @font-face { font-family: "Geist Mono"; src: url("/fonts/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  /* Tokens and components follow DESIGN.md: cream paper, botanical tinted panels, weight-300 serif
+     headings, flat surfaces (no shadows), 14px corners, pill tags. Fonts are DESIGN.md's substitutes, self-hosted. */
+  @font-face { font-family: "Cormorant Garamond"; font-weight: 300; font-display: swap; src: url("/fonts/serif-300-latin.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Cormorant Garamond"; font-weight: 300; font-display: swap; src: url("/fonts/serif-300-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  @font-face { font-family: "Inter Variable"; font-weight: 100 900; font-display: swap; src: url("/fonts/sans-latin.woff2") format("woff2-variations"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Inter Variable"; font-weight: 100 900; font-display: swap; src: url("/fonts/sans-latin-ext.woff2") format("woff2-variations"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
   :root {
-    --color-canvas: #f5f5f5; --color-paper: #ffffff; --color-surface-alt: #fafafa;
-    --color-ink: #0a0a0a; --color-ink-soft: #171717; --color-mid-gray: #737373;
-    --color-hairline: #e5e5e5; --color-ember: #e7000b;
-    --radius-cards: 24px; --radius-pill: 18px; --radius-nested: 10px; --radius-small: 6px;
-    --shadow-card: 0 0 0 1px rgba(23,23,23,0.05), 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+    --color-forest-ink: #0f3e17; --color-forest-shadow: #0c2f10;
+    --color-sage-mist: #b1dbb8; --color-keylime-wash: #e1f4df; --color-mint-veil: #cfe7d3; --color-slate-hush: #b6ced5;
+    --color-cream-paper: #fffefc; --color-charcoal: #222222; --color-border-mist: #efeeeb;
+    --font-display: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+    --font-body: "Inter Variable", Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --radius-nav: 7px; --radius-cards: 14px; --radius-badges: 999px;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
-  body { background: var(--color-canvas); color: var(--color-ink); font-family: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 14px; line-height: 1.43; font-feature-settings: "ss01" on, "cv11" on; -webkit-font-smoothing: antialiased; }
-  .mono { font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
-  a { color: inherit; text-decoration: underline; text-decoration-color: var(--color-hairline); text-underline-offset: 3px; }
-  a:hover { text-decoration-color: var(--color-ink); }
+  body { background: var(--color-cream-paper); color: var(--color-charcoal); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  a { color: var(--color-forest-ink); text-underline-offset: 4px; text-decoration-thickness: 1px; }
   svg { flex: none; }
+  .mono { font-family: var(--font-mono); font-size: 12px; }
+  .muted { color: #4d524b; }
 
-  .topbar { position: sticky; top: 0; z-index: 10; background: var(--color-canvas); border-bottom: 1px solid var(--color-hairline); }
-  .topbar-inner { max-width: 1280px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 16px; letter-spacing: -0.4px; }
-  .brand-mark { width: 24px; height: 24px; border-radius: var(--radius-small); background: var(--color-ink); color: #fafafa; display: grid; place-items: center; }
-  .page { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-forest-ink); margin: 0 0 14px; }
+  .display { font-family: var(--font-display); font-weight: 300; font-size: 74px; line-height: 1.05; letter-spacing: -2.22px; color: var(--color-forest-ink); margin: 0; font-variant-numeric: lining-nums; }
+  .h { font-family: var(--font-display); font-weight: 300; font-size: 40px; line-height: 1.3; letter-spacing: -0.4px; color: var(--color-forest-ink); margin: 0; font-variant-numeric: lining-nums; }
+  .display-56 { font-size: 56px; line-height: 1.1; letter-spacing: -1.68px; }
+  .lede { font-size: 18px; line-height: 1.5; font-weight: 300; margin: 21px 0 0; max-width: 48ch; }
 
-  .badge { display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-pill); padding: 2px 8px; font-size: 12px; font-weight: 500; line-height: 1.5; white-space: nowrap; }
-  .badge-soft { background: var(--color-canvas); color: var(--color-ink-soft); }
-  .badge-outline { border: 1px solid var(--color-hairline); }
-  .badge-solid { background: var(--color-ink-soft); color: #fafafa; }
-  .badge-err { border: 1px solid var(--color-hairline); color: var(--color-ember); }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .nav { max-width: 1200px; margin: 0 auto; padding: 21px 28px; display: flex; align-items: center; justify-content: space-between; gap: 21px; }
+  .brand { display: inline-flex; align-items: center; gap: 9px; font-family: var(--font-display); font-weight: 300; font-size: 28px; letter-spacing: -0.5px; color: var(--color-forest-ink); }
+  .nav-end { display: flex; align-items: center; gap: 11px; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 0 28px; }
 
-  .hero { padding: 48px 0 40px; }
-  .eyebrow { font-size: 12px; line-height: 1.33; letter-spacing: 0.6px; text-transform: uppercase; color: var(--color-mid-gray); font-weight: 500; margin: 0 0 12px; }
-  .display { font-size: 48px; line-height: 1.1; letter-spacing: -2.4px; font-weight: 600; margin: 0; }
-  .lede { font-size: 16px; line-height: 1.5; color: var(--color-mid-gray); margin: 16px 0 0; max-width: 64ch; }
-  .source { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .panel { border-radius: var(--radius-cards); padding: 42px; min-width: 0; }
+  .keylime { background: var(--color-keylime-wash); } .mint { background: var(--color-mint-veil); }
+  .sage { background: var(--color-sage-mist); } .slate { background: var(--color-slate-hush); }
+  .paper { background: var(--color-cream-paper); border-radius: var(--radius-cards); }
 
-  .card { background: var(--color-paper); border: 1px solid var(--color-hairline); border-radius: var(--radius-cards); box-shadow: var(--shadow-card); }
-  .card-header { padding: 20px 20px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  .card-title { font-size: 18px; line-height: 1.56; font-weight: 600; letter-spacing: -0.2px; margin: 0; }
-  .card-desc { color: var(--color-mid-gray); margin: 2px 0 0; }
-  .card-body { padding: 20px; }
-  .stack { display: grid; gap: 24px; }
-  .stack > *, .two > * { min-width: 0; }
-  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+  .btn { display: inline-flex; align-items: center; gap: 9px; border-radius: 14px; padding: 14px 21px; background: var(--color-forest-ink); color: var(--color-cream-paper); text-decoration: none; white-space: nowrap; line-height: 1.2; }
+  .btn:hover { background: var(--color-forest-shadow); }
+  .badge { font-family: var(--font-body); display: inline-flex; align-items: center; gap: 7px; border-radius: var(--radius-badges); padding: 9px 14px; background: var(--color-cream-paper); color: var(--color-forest-ink); font-size: 14px; line-height: 1; white-space: nowrap; }
+  .badge-sm { padding: 6px 11px; font-size: 12px; }
+  .badge-line { box-shadow: inset 0 0 0 1px var(--color-border-mist); }
+  .badge-solid { background: var(--color-forest-ink); color: var(--color-cream-paper); }
+  .badge-err { background: var(--color-cream-paper); font-weight: 600; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
-  .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  .stat { padding: 20px; border-left: 1px solid var(--color-hairline); }
-  .stat:first-child { border-left: 0; }
-  .stat-label { font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--color-mid-gray); font-weight: 500; }
-  .stat-value { font-size: 30px; line-height: 1.2; letter-spacing: -0.75px; font-weight: 600; margin-top: 6px; font-variant-numeric: tabular-nums; }
-  .stat-sub { color: var(--color-mid-gray); margin-top: 2px; font-size: 12px; }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 14px; padding-top: 14px; }
+  .hero .keylime { display: flex; flex-direction: column; justify-content: space-between; gap: 35px; }
+  .source { display: flex; flex-wrap: wrap; gap: 9px; }
+  .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 21px; }
+  .stat { background: var(--color-cream-paper); border-radius: var(--radius-cards); padding: 21px 28px; }
+  .stat-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-forest-ink); }
+  .stat-value { font-family: var(--font-display); font-weight: 300; font-size: 40px; line-height: 1.15; letter-spacing: -0.4px; color: var(--color-forest-ink); margin-top: 4px; font-variant-numeric: lining-nums tabular-nums; }
+  .stat-sub { font-size: 12px; color: #4d524b; }
 
-  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-  .check { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; align-items: start; padding: 12px; border-radius: var(--radius-nested); background: var(--color-surface-alt); }
-  .check .t { font-weight: 500; }
-  .check .d { color: var(--color-mid-gray); }
-  .check.fail, .check.fail .t { color: var(--color-ember); }
-  .tick { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--color-ink); color: #fafafa; }
-  .check.fail .tick { background: transparent; color: var(--color-ember); border: 1px solid var(--color-ember); }
+  .section { padding: 14px 0 0; display: grid; gap: 14px; }
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 21px; margin-bottom: 21px; }
+  .head p { margin: 4px 0 0; }
 
-  .table-wrap { overflow-x: auto; padding: 8px 8px 12px; }
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; background: var(--color-cream-paper); border-radius: var(--radius-cards); }
+  .check { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 14px; align-items: start; padding: 21px 28px; }
+  .check + .check { border-top: 1px solid var(--color-border-mist); }
+  .check .t { font-family: var(--font-display); font-weight: 300; font-size: 26px; line-height: 1.2; color: var(--color-forest-ink); font-variant-numeric: lining-nums; }
+  .check .d { color: #4d524b; margin-top: 4px; }
+  .tick { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--color-forest-ink); color: var(--color-cream-paper); margin-top: 2px; }
+  .check.fail { background: var(--color-keylime-wash); }
+  .check.fail .tick { background: var(--color-cream-paper); color: var(--color-forest-ink); box-shadow: inset 0 0 0 1.5px var(--color-forest-ink); }
+  .check.fail .t { font-family: var(--font-body); font-size: 16px; font-weight: 600; }
+
+  .table-wrap { overflow-x: auto; background: var(--color-cream-paper); border-radius: var(--radius-cards); padding: 7px 14px 14px; }
   table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--color-mid-gray); font-weight: 500; padding: 10px 12px; white-space: nowrap; }
-  td { padding: 12px; border-top: 1px solid var(--color-hairline); vertical-align: top; }
+  th { text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-forest-ink); padding: 14px; white-space: nowrap; }
+  td { padding: 14px; border-top: 1px solid var(--color-border-mist); vertical-align: top; }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   td.mono { word-break: break-all; }
-  .muted { color: var(--color-mid-gray); }
-  .empty { color: var(--color-mid-gray); text-align: center; padding: 24px 12px; }
-  .error { margin-top: 24px; display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-radius: var(--radius-cards); border: 1px solid var(--color-hairline); background: var(--color-paper); color: var(--color-ember); }
-  .footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--color-hairline); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--color-mid-gray); font-size: 12px; }
+  .empty { color: #4d524b; text-align: center; padding: 28px 14px; }
 
-  @media (max-width: 1100px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .stat:nth-child(4) { border-left: 0; } .stat:nth-child(n+4) { border-top: 1px solid var(--color-hairline); } }
-  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+  .error { margin-top: 21px; display: flex; gap: 11px; align-items: flex-start; padding: 14px 18px; border-radius: var(--radius-cards); background: var(--color-cream-paper); color: var(--color-forest-ink); font-weight: 600; }
+  .footer { display: flex; justify-content: space-between; gap: 21px; flex-wrap: wrap; margin-top: 64px; padding: 42px 0 56px; border-top: 1px solid var(--color-border-mist); color: #4d524b; font-size: 12px; }
+
+  @media (max-width: 1040px) { .hero, .two { grid-template-columns: 1fr; } }
   @media (max-width: 720px) {
-    .page { padding: 0 16px 48px; } .topbar-inner { padding: 10px 16px; } .hero { padding: 32px 0 24px; }
-    .display { font-size: 30px; line-height: 1.2; letter-spacing: -0.75px; }
-    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .stat:nth-child(n) { border-left: 0; border-top: 1px solid var(--color-hairline); } .stat:nth-child(even) { border-left: 1px solid var(--color-hairline); } .stat:nth-child(-n+2) { border-top: 0; }
-    .stat-value { font-size: 24px; letter-spacing: -0.6px; }
-    .net-badge { display: none; }
+    .page { padding: 0 14px; } .nav { padding: 14px; } .panel { padding: 28px; }
+    .display { font-size: 44px; line-height: 1.08; letter-spacing: -1.2px; } .h { font-size: 34px; } .lede { font-size: 16px; }
+    .stat { padding: 18px 21px; } .stat-value { font-size: 30px; }
+    .check { padding: 18px 21px; } .check .t { font-size: 22px; }
+    .net-badge { display: none; } .head { flex-wrap: wrap; }
   }
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <span class="brand-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-      Hexera <span class="badge badge-soft">Audit</span>
-    </div>
-    <span class="badge badge-outline net-badge" id="net"><span class="dot"></span>loading…</span>
+<header class="nav">
+  <span class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg>
+    Hexera <span class="badge badge-sm badge-line">Audit</span>
+  </span>
+  <div class="nav-end">
+    <span class="badge badge-sm badge-line net-badge" id="net"><span class="dot"></span>loading…</span>
+    <a class="btn" id="reader" href="http://localhost:3000">Open the reader
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg>
+    </a>
   </div>
 </header>
+
 <main class="page">
   <section class="hero">
-    <p class="eyebrow">Public books</p>
-    <h1 class="display">Rebuilt from HCS.<br />Nothing taken on trust.</h1>
-    <p class="lede">Everything on this page is read from two public Hedera Consensus Service topics through the mirror node. None of it comes from the facilitator's database, so anyone can run these checks.</p>
-    <div class="source" id="src"></div>
+    <div class="panel keylime">
+      <div>
+        <p class="eyebrow">Public books</p>
+        <h1 class="display display-56">Rebuilt from HCS.<br />Nothing taken on trust.</h1>
+        <p class="lede">Everything on this page is read from two public Hedera Consensus Service topics through the mirror node. None of it comes from the facilitator's database, so anyone can run these checks.</p>
+      </div>
+      <div class="source" id="src"></div>
+    </div>
+    <div class="panel slate">
+      <p class="eyebrow" style="margin:0">The books, from the topics</p>
+      <div class="stats" id="cards"></div>
+    </div>
   </section>
 
-  <div class="stack">
-    <section class="card"><div class="stats" id="cards"></div></section>
-
-    <section class="card">
-      <div class="card-header"><div><h2 class="card-title">Checks anyone can run</h2><p class="card-desc">Recomputed every 10 seconds from the topics.</p></div><span id="checks-badge"></span></div>
-      <div class="card-body"><ul class="checks" id="checks"></ul></div>
+  <div class="section">
+    <section class="panel sage">
+      <div class="head"><div><p class="eyebrow">Integrity</p><h2 class="h">Checks anyone can run</h2><p class="muted">Recomputed every 10 seconds from the topics.</p></div><span id="checks-badge"></span></div>
+      <ul class="checks" id="checks"></ul>
     </section>
 
     <div class="two">
-      <section class="card">
-        <div class="card-header"><div><h2 class="card-title">Merchants</h2><p class="card-desc">Burned on hexera-spent vs paid out in HTS batches.</p></div></div>
+      <section class="panel keylime">
+        <div class="head"><div><p class="eyebrow">Merchants</p><h2 class="h">Burned vs paid out</h2><p class="muted">Spends on hexera-spent against HTS payout batches.</p></div></div>
         <div class="table-wrap"><table id="merchants"></table></div>
       </section>
-      <section class="card">
-        <div class="card-header"><div><h2 class="card-title">Epoch keys</h2><p class="card-desc">Clients refuse any signing key not listed here.</p></div></div>
+      <section class="panel mint">
+        <div class="head"><div><p class="eyebrow">Signing keys</p><h2 class="h">Epoch keys</h2><p class="muted">Clients refuse any key not listed here.</p></div></div>
         <div class="table-wrap"><table id="keys"></table></div>
       </section>
     </div>
 
-    <section class="card">
-      <div class="card-header"><div><h2 class="card-title">Payout batches</h2><p class="card-desc">One HTS transfer pays every merchant with a pending balance.</p></div></div>
+    <section class="panel mint">
+      <div class="head"><div><p class="eyebrow">Payouts</p><h2 class="h">Payout batches</h2><p class="muted">One HTS transfer pays every merchant with a pending balance.</p></div></div>
       <div class="table-wrap"><table id="payouts"></table></div>
     </section>
 
-    <section class="card">
-      <div class="card-header"><div><h2 class="card-title">Latest spent messages</h2><p class="card-desc">Anonymous spend ids and request hashes. There is no payer field.</p></div></div>
+    <section class="panel keylime">
+      <div class="head"><div><p class="eyebrow">hexera-spent</p><h2 class="h">Latest spent messages</h2><p class="muted">Anonymous spend ids and request hashes. There is no payer field.</p></div></div>
       <div class="table-wrap"><table id="spent"></table></div>
     </section>
   </div>

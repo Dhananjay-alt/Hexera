@@ -47,6 +47,7 @@ async function main() {
     cfg.ledgerTopic ??= s.topics.ledger;
   }
   $("net").innerHTML = `<span class="dot"></span>${esc(cfg.network)}`;
+  if (cfg.readerUrl) $("reader").href = cfg.readerUrl;
   $("src").innerHTML = [
     `<span class="badge badge-outline">mirror <span class="mono">${esc(cfg.mirrorUrl.replace(/^https?:\/\//, ""))}</span></span>`,
     `<span class="badge badge-outline">hexera-spent <span class="mono">${esc(cfg.spentTopic)}</span></span>`,
@@ -107,7 +108,7 @@ async function main() {
   const failed = checks.filter((c) => !c[0]).length;
   $("checks-badge").innerHTML = failed ? `<span class="badge badge-err">${failed} failing</span>` : `<span class="badge badge-solid">All ${checks.length} pass</span>`;
   $("checks").innerHTML = checks
-    .map(([ok, t, d]) => `<li class="check${ok ? "" : " fail"}"><span class="tick">${ok ? ICON.check : ICON.x}</span><span><div class="t">${t}</div><div class="d">${d}</div></span></li>`)
+    .map(([ok, t, d]) => `<li class="check${ok ? "" : " fail"}"><span class="tick">${ok ? ICON.check : ICON.x}</span><span><div class="t">${ok ? "" : "Failing: "}${t}</div><div class="d">${d}</div></span></li>`)
     .join("");
 
   $("merchants").innerHTML = table(
@@ -135,5 +136,5 @@ async function main() {
   );
 }
 
-main().catch((e) => { document.querySelector(".hero").insertAdjacentHTML("beforeend", `<div class="error" role="alert">${ICON.alert}${esc(e.message)}</div>`); });
+main().catch((e) => { document.querySelector(".hero .keylime > div").insertAdjacentHTML("beforeend", `<div class="error" role="alert">${ICON.alert}${esc(e.message)}</div>`); });
 setInterval(() => main().catch(() => {}), 10000);

@@ -21,18 +21,22 @@ const config = {
   spentTopic: mode === "testnet" ? (process.env.HEXERA_SPENT_TOPIC_ID ?? null) : null,
   ledgerTopic: mode === "testnet" ? (process.env.HEXERA_LEDGER_TOPIC_ID ?? null) : null,
   facilitator,
+  readerUrl: process.env.NEXT_PUBLIC_READER_URL ?? "http://localhost:3000",
 };
 
 const files: Record<string, [string, string]> = {
   "/": ["index.html", "text/html; charset=utf-8"],
   "/audit.js": ["audit.js", "text/javascript; charset=utf-8"],
 };
-// Geist is served from the local geist package: no font CDN, no third-party requests.
+// Fonts are served from the local @fontsource packages: no font CDN, no third-party requests.
 const require = createRequire(import.meta.url);
-const geistFonts = join(dirname(require.resolve("geist/font/sans")), "fonts");
+const serifFiles = join(dirname(require.resolve("@fontsource/cormorant-garamond/300.css")), "files");
+const sansFiles = join(dirname(require.resolve("@fontsource-variable/inter")), "files");
 const fonts: Record<string, string> = {
-  "/fonts/Geist-Variable.woff2": join(geistFonts, "geist-sans", "Geist-Variable.woff2"),
-  "/fonts/GeistMono-Variable.woff2": join(geistFonts, "geist-mono", "GeistMono-Variable.woff2"),
+  "/fonts/serif-300-latin.woff2": join(serifFiles, "cormorant-garamond-latin-300-normal.woff2"),
+  "/fonts/serif-300-latin-ext.woff2": join(serifFiles, "cormorant-garamond-latin-ext-300-normal.woff2"),
+  "/fonts/sans-latin.woff2": join(sansFiles, "inter-latin-wght-normal.woff2"),
+  "/fonts/sans-latin-ext.woff2": join(sansFiles, "inter-latin-ext-wght-normal.woff2"),
 };
 
 createServer((req, res) => {
