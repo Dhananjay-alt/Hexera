@@ -5,7 +5,8 @@ export interface FacilitatorConfig {
   port: number;
   publicUrl: string;
   dataDir: string;
-  adminToken: string;
+  /** unset = admin endpoints disabled */
+  adminToken?: string;
 
   // Hedera
   network: "testnet" | "mainnet";
@@ -49,7 +50,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): FacilitatorCon
     port,
     publicUrl: env.FACILITATOR_URL ?? `http://localhost:${port}`,
     dataDir: resolve(env.HEXERA_DATA_DIR ?? "data"),
-    adminToken: env.ADMIN_TOKEN ?? "dev-admin-token",
+    adminToken: env.ADMIN_TOKEN || undefined,
 
     network: (env.HEDERA_NETWORK ?? "testnet") as "testnet" | "mainnet",
     operatorId: env.HEDERA_OPERATOR_ID,

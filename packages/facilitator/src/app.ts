@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import cors from "@fastify/cors";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { HexeraPaymentPayload, HexeraRequirements } from "@hexera/core";
@@ -16,8 +17,13 @@ export async function buildApp(f: Facilitator, opts: { logger?: boolean } = {}):
     return reply.code(500).send({ error: "internal", message: "internal error" });
   });
 
+  // Admin endpoints exist only when ADMIN_TOKEN is set; otherwise they are not registered (404).
+  const adminToken = f.cfg.adminToken;
+  const sha = (s: string) => createHash("sha256").update(s).digest();
   const requireAdmin = (h: string | undefined) => {
-    if (h !== `Bearer ${f.cfg.adminToken}`) throw new HttpError(401, "unauthorized", "admin token required");
+    const m = /^Bearer (.+)$/.exec(h ?? "");
+    // Compare fixed-length digests so neither the content nor the length of the token leaks through timing.
+    if (!m || !adminToken || !timingSafeEqual(sha(m[1]), sha(adminToken))) throw new HttpError(401, "unauthorized", "admin token required");
   };
 
   // ---- public ----
@@ -48,16 +54,17 @@ export async function buildApp(f: Facilitator, opts: { logger?: boolean } = {}):
     return f.settle(b?.paymentPayload, b?.paymentRequirements);
   });
 
-  // ---- operator ----
-  app.post("/payout", async (req) => {
-    requireAdmin(req.headers.authorization);
-    return f.payout();
-  });
-
-  app.post("/admin/refund", async (req) => {
-    requireAdmin(req.headers.authorization);
-    return f.refundUnusedDeposit((req.body as { txId: string })?.txId);
-  });
+  // ---- operator (token-protected; disabled when ADMIN_TOKEN is unset) ----
+  if (adminToken) {
+    app.post("/payout", async (req) => {
+      requireAdmin(req.headers.authorization);
+      return f.payout();
+    });
+    app.post("/admin/refund", async (req) => {
+      requireAdmin(req.headers.authorization);
+      return f.refundUnusedDeposit((req.body as { txId: string })?.txId);
+    });
+  }
 
   // ---- local mode: mirror-node shaped reads + test wallet ----
   const local = f.local;

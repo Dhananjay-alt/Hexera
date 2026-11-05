@@ -22,7 +22,7 @@ const silent = { info() {}, warn() {}, error() {} };
 
 before(async () => {
   dir = mkdtempSync(join(tmpdir(), "hexera-test-"));
-  const cfg = loadConfig({ HEXERA_MODE: "local", HEXERA_DATA_DIR: dir, FREE_DAILY_LIMIT_BASE: "100000", HUMAN_DAILY_CAP_BASE: "300000" });
+  const cfg = loadConfig({ HEXERA_MODE: "local", HEXERA_DATA_DIR: dir, ADMIN_TOKEN: "test-admin-token", FREE_DAILY_LIMIT_BASE: "100000", HUMAN_DAILY_CAP_BASE: "300000" });
   f = await Facilitator.create(cfg, silent);
   fapp = await buildApp(f);
   await fapp.listen({ port: 0, host: "127.0.0.1" });
@@ -186,13 +186,13 @@ test("a fresh database rebuilds from HCS: key re-published, deposits not re-cred
   }
 
   // Operator refund of the unused credit.
-  const r = await fetch(`${fUrl}/admin/refund`, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer dev-admin-token" }, body: JSON.stringify({ txId: b.transactionId }) });
+  const r = await fetch(`${fUrl}/admin/refund`, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer test-admin-token" }, body: JSON.stringify({ txId: b.transactionId }) });
   assert.equal(r.status, 200);
   const before = f.local!.balance(b.account, f.ids.token);
   await f.payout();
   assert.equal(f.local!.balance(b.account, f.ids.token), before + 20_200n);
   // And a deposit that already issued vouchers can't be refunded.
-  const r2 = await fetch(`${fUrl}/admin/refund`, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer dev-admin-token" }, body: JSON.stringify({ txId: a.transactionId }) });
+  const r2 = await fetch(`${fUrl}/admin/refund`, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer test-admin-token" }, body: JSON.stringify({ txId: a.transactionId }) });
   assert.equal(r2.status, 409);
 });
 
@@ -209,5 +209,38 @@ test("a stale 'key published' flag can't hide the key: it is re-published if mis
     await f3.close();
   } finally {
     rmSync(dir2, { recursive: true, force: true });
+  }
+});
+
+test("admin endpoints: no token 401, wrong token 401, right token works, ADMIN_TOKEN unset 404", async () => {
+  const call = (path: string, auth?: string) =>
+    fetch(`${fUrl}${path}`, { method: "POST", headers: { "content-type": "application/json", ...(auth ? { authorization: auth } : {}) }, body: JSON.stringify({ txId: "0.0.1@1.1" }) });
+  for (const path of ["/admin/refund", "/payout"]) {
+    assert.equal((await call(path)).status, 401, `${path} without token`);
+    assert.equal((await call(path, "Bearer wrong-token")).status, 401, `${path} wrong token`);
+    assert.equal((await call(path, "Bearer test-admin-token-but-longer")).status, 401, `${path} longer token`);
+    assert.equal((await call(path, "test-admin-token")).status, 401, `${path} missing Bearer`);
+  }
+  // Right token: the request is authorised and reaches the handler (unknown deposit -> 404 from the handler; payout -> 200).
+  const ok = await call("/admin/refund", "Bearer test-admin-token");
+  assert.equal(ok.status, 404);
+  assert.equal(((await ok.json()) as { error: string }).error, "unknown_deposit");
+  assert.equal((await call("/payout", "Bearer test-admin-token")).status, 200);
+
+  // ADMIN_TOKEN unset: the routes are not registered at all.
+  const dir3 = mkdtempSync(join(tmpdir(), "hexera-noadmin-"));
+  try {
+    const f4 = await Facilitator.create(loadConfig({ HEXERA_MODE: "local", HEXERA_DATA_DIR: dir3 }), silent);
+    const app4 = await buildApp(f4);
+    for (const url of ["/admin/refund", "/payout"]) {
+      for (const authorization of [undefined, "Bearer ", "Bearer undefined"]) {
+        const r = await app4.inject({ method: "POST", url, payload: {}, headers: authorization ? { authorization } : {} });
+        assert.equal(r.statusCode, 404, `${url} must be disabled (auth=${authorization})`);
+      }
+    }
+    await app4.close();
+    await f4.close();
+  } finally {
+    rmSync(dir3, { recursive: true, force: true });
   }
 });

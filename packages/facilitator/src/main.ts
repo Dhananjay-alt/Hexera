@@ -14,6 +14,7 @@ const s = await f.supported();
 f.log.info(`listening on ${cfg.publicUrl} — mode=${cfg.mode} network=${s.hexera.network}`);
 f.log.info(`treasury=${f.ids.treasury} token=${f.ids.token} hexera-spent=${f.ids.spentTopic} hexera-ledger=${f.ids.ledgerTopic}`);
 f.log.info(`epoch ${s.hexera.currentEpoch} key fingerprint ${s.hexera.keys[0]?.fingerprint}`);
+if (!cfg.adminToken) f.log.warn("ADMIN_TOKEN not set: POST /payout and /admin/refund are disabled (the payout cron still runs)");
 f.log.info(`merchants: ${f.merchants().map((m) => `${m.id}(${m.account})`).join(", ")}`);
 
 const payoutTimer = setInterval(() => {

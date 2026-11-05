@@ -15,7 +15,7 @@ import { MirrorClient, decodeMessage, hashscanTopicUrl, hashscanTxUrl, userDepos
 
 const FAC = process.env.FACILITATOR_URL ?? "http://localhost:4020";
 const PUBS = [process.env.PUBLISHER_A_URL ?? "http://localhost:4021", process.env.PUBLISHER_B_URL ?? "http://localhost:4022"];
-const ADMIN = process.env.ADMIN_TOKEN ?? "dev-admin-token";
+const ADMIN = process.env.ADMIN_TOKEN;
 
 const c = { b: "\x1b[1m", d: "\x1b[2m", g: "\x1b[32m", r: "\x1b[31m", y: "\x1b[33m", cy: "\x1b[36m", x: "\x1b[0m" };
 const step = (n: string, t: string) => console.log(`\n${c.b}${c.cy}${n}  ${t}${c.x}`);
@@ -125,9 +125,13 @@ if (useDevWorldId) {
 
 // ----------------------------------------------------------------- payout
 step("5", "Payout: one HTS transfer pays every publisher");
-const p = await post<{ batches: { batchId: string; transactionId: string; merchants: number; totalUnits: number }[] }>("/payout", {}, { authorization: `Bearer ${ADMIN}` });
-for (const b of p.batches) ok(`batch ${b.batchId}: ${b.merchants} merchant(s), ${b.totalUnits} unit(s) = ${formatUsdc(BigInt(b.totalUnits) * 1000n)} USDC → ${link(s, b.transactionId)}`);
-if (!p.batches.length) info("nothing pending (the payout cron may have just run)");
+if (!ADMIN) {
+  info("ADMIN_TOKEN not set, so POST /payout is disabled; the payout cron pays merchants within PAYOUT_INTERVAL_SECONDS");
+} else {
+  const p = await post<{ batches: { batchId: string; transactionId: string; merchants: number; totalUnits: number }[] }>("/payout", {}, { authorization: `Bearer ${ADMIN}` });
+  for (const b of p.batches) ok(`batch ${b.batchId}: ${b.merchants} merchant(s), ${b.totalUnits} unit(s) = ${formatUsdc(BigInt(b.totalUnits) * 1000n)} USDC → ${link(s, b.transactionId)}`);
+  if (!p.batches.length) info("nothing pending (the payout cron may have just run)");
+}
 
 step("6", "What each party learned");
 info(`chain:       ${dep.account} deposited ${formatUsdc(amount)} to Hexera; publishers got a batch payout; serials burned at times T`);
