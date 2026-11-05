@@ -62,6 +62,10 @@ export async function buildApp(f: Facilitator, opts: { logger?: boolean } = {}):
       if (!local.hasTopic(id)) return reply.code(404).send({ _status: { messages: [{ message: "Not found" }] } });
       const q = req.query as { limit?: string; sequencenumber?: string };
       const limit = Math.min(Number(q.limit ?? 25), 100);
+      if (q.sequencenumber !== undefined && !/^gt:[1-9]\d*$/.test(q.sequencenumber)) {
+        // Mirror node parity: it rejects gt:0 and malformed filters with 400.
+        return reply.code(400).send({ _status: { messages: [{ message: "Invalid parameter: sequencenumber" }] } });
+      }
       const after = Number((q.sequencenumber ?? "gt:0").replace(/^gt:/, "")) || 0;
       const messages = local.topicMessages(id, after, limit);
       const last = messages.at(-1);

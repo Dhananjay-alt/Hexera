@@ -69,7 +69,9 @@ export class MirrorClient {
   /** All messages with sequence_number > afterSequence, following pagination. */
   async getTopicMessages(topicId: string, afterSequence = 0, maxPages = 50): Promise<MirrorTopicMessage[]> {
     const out: MirrorTopicMessage[] = [];
-    let next: string | null = `/api/v1/topics/${topicId}/messages?limit=100&order=asc&sequencenumber=gt:${afterSequence}`;
+    // The public mirror node rejects `sequencenumber=gt:0` (400), so only filter when there is something to skip.
+    const filter = afterSequence > 0 ? `&sequencenumber=gt:${afterSequence}` : "";
+    let next: string | null = `/api/v1/topics/${topicId}/messages?limit=100&order=asc${filter}`;
     for (let i = 0; next && i < maxPages; i++) {
       const page: { messages: MirrorTopicMessage[]; links?: { next?: string | null } } | null = await this.get(next);
       if (!page) break;
