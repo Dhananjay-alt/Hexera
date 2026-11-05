@@ -9,3 +9,4 @@ data/*
 *.sqlite
 *.sqlite-*
 next-env.d.ts
+*.tsbuildinfo
