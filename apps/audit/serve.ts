@@ -30,11 +30,11 @@ const files: Record<string, [string, string]> = {
 };
 // Fonts are served from the local @fontsource packages: no font CDN, no third-party requests.
 const require = createRequire(import.meta.url);
-const serifFiles = join(dirname(require.resolve("@fontsource/cormorant-garamond/300.css")), "files");
+const monoFiles = join(dirname(require.resolve("@fontsource/jetbrains-mono/400.css")), "files");
 const sansFiles = join(dirname(require.resolve("@fontsource-variable/inter")), "files");
 const fonts: Record<string, string> = {
-  "/fonts/serif-300-latin.woff2": join(serifFiles, "cormorant-garamond-latin-300-normal.woff2"),
-  "/fonts/serif-300-latin-ext.woff2": join(serifFiles, "cormorant-garamond-latin-ext-300-normal.woff2"),
+  "/fonts/mono-latin.woff2": join(monoFiles, "jetbrains-mono-latin-400-normal.woff2"),
+  "/fonts/mono-latin-ext.woff2": join(monoFiles, "jetbrains-mono-latin-ext-400-normal.woff2"),
   "/fonts/sans-latin.woff2": join(sansFiles, "inter-latin-wght-normal.woff2"),
   "/fonts/sans-latin-ext.woff2": join(sansFiles, "inter-latin-ext-wght-normal.woff2"),
 };
