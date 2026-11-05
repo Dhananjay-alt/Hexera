@@ -125,15 +125,47 @@ export class Facilitator {
     await this.currentKey();
   }
 
-  /** Read hexera-ledger and return the epoch keys published there. */
+  /**
+   * Read hexera-ledger: re-import deposit records (so a lost database can't
+   * credit the same deposit twice) and return the epoch keys published there.
+   */
   async syncLedger(): Promise<Set<string>> {
     const msgs = await this.backend.mirror.getTopicMessages(this.ids.ledgerTopic, 0);
     const keys = new Set<string>();
+    const ins = this.db.db.prepare(
+      "INSERT OR IGNORE INTO deposits (tx_id, account, amount_base, day, human, status, credit, created_at) VALUES (?, '', ?, '', NULL, 'credited', NULL, ?)",
+    );
+    let n = 0;
     for (const m of msgs) {
       const d = decodeMessage<LedgerMessage>(m);
       if (d?.t === "epoch_key") keys.add(d.publicKey);
+      if (d?.t === "deposit") n += Number(ins.run(d.depositTx, d.amountBase, Date.now()).changes);
     }
+    if (n) this.log.info(`imported ${n} deposit record(s) from hexera-ledger`);
     return keys;
+  }
+
+  /**
+   * Operator recovery: refund a deposit whose credit was never used (e.g. the
+   * client lost it). Paid back to the depositing account in the next payout.
+   */
+  async refundUnusedDeposit(txId: string) {
+    const row = this.db.db.prepare("SELECT status, credit FROM deposits WHERE tx_id = ?").get(txId) as { status: string; credit: string | null } | undefined;
+    if (!row) throw new HttpError(404, "unknown_deposit", "deposit not found");
+    if (row.status !== "credited") throw new HttpError(409, "not_refundable", `deposit is ${row.status}`);
+    if (row.credit) {
+      const c = this.db.db.prepare("SELECT units_used FROM credits WHERE token = ?").get(row.credit) as { units_used: number } | undefined;
+      if (c && c.units_used > 0) throw new HttpError(409, "credit_used", "vouchers were already issued for this deposit");
+    }
+    const tx = await this.backend.mirror.getTransaction(txId);
+    const from = tx?.token_transfers?.find((t) => t.token_id === this.ids.token && t.amount < 0)?.account;
+    if (!from) throw new HttpError(404, "deposit_not_found", "deposit transaction not found on mirror node");
+    this.db.tx(() => {
+      if (row.credit) this.db.db.prepare("DELETE FROM credits WHERE token = ?").run(row.credit);
+      this.db.db.prepare("UPDATE deposits SET status = 'refund_pending', account = ?, credit = NULL WHERE tx_id = ?").run(from, txId);
+    });
+    this.log.warn(`deposit ${txId} queued for refund to ${from}`);
+    return { txId, account: from, status: "refund_pending" };
   }
 
   // ---------------------------------------------------------------- ledger

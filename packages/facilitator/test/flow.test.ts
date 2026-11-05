@@ -166,6 +166,36 @@ test("books balance: issued <= credited, treasury covers outstanding vouchers", 
   assert.ok(BigInt(b.treasuryBalanceBase!) >= outstanding);
 });
 
+test("a fresh database rebuilds from HCS: key re-published, deposits not re-creditable, unused deposit refundable", async () => {
+  const a = await fundedWallet("frank", "20200");
+  await a.redeem();
+  const b = await fundedWallet("grace", "20200");
+  // grace's credit is obtained but never used for issuance (client lost it)
+  const lost = await post<{ credit: string }>("/deposit/verify", { txId: b.transactionId });
+  assert.ok(lost.credit);
+
+  // A second facilitator on the same ledger with an empty database and a stale "key published" flag.
+  const f2 = await Facilitator.create(f.cfg, silent, join(dir, "fresh.sqlite"));
+  try {
+    await assert.rejects(f2.depositVerify({ txId: a.transactionId }), (e: { code?: string }) => e.code === "deposit_already_used");
+    // Spent serials were rebuilt from hexera-spent.
+    const spentCount = (f2.db.db.prepare("SELECT COUNT(*) AS n FROM spent").get() as { n: number }).n;
+    assert.ok(spentCount > 0);
+  } finally {
+    await f2.close();
+  }
+
+  // Operator refund of the unused credit.
+  const r = await fetch(`${fUrl}/admin/refund`, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer dev-admin-token" }, body: JSON.stringify({ txId: b.transactionId }) });
+  assert.equal(r.status, 200);
+  const before = f.local!.balance(b.account, f.ids.token);
+  await f.payout();
+  assert.equal(f.local!.balance(b.account, f.ids.token), before + 20_200n);
+  // And a deposit that already issued vouchers can't be refunded.
+  const r2 = await fetch(`${fUrl}/admin/refund`, { method: "POST", headers: { "content-type": "application/json", authorization: "Bearer dev-admin-token" }, body: JSON.stringify({ txId: a.transactionId }) });
+  assert.equal(r2.status, 409);
+});
+
 test("a stale 'key published' flag can't hide the key: it is re-published if missing from HCS", async () => {
   const dir2 = mkdtempSync(join(tmpdir(), "hexera-stale-"));
   try {

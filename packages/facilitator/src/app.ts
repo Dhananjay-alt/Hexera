@@ -54,6 +54,11 @@ export async function buildApp(f: Facilitator, opts: { logger?: boolean } = {}):
     return f.payout();
   });
 
+  app.post("/admin/refund", async (req) => {
+    requireAdmin(req.headers.authorization);
+    return f.refundUnusedDeposit((req.body as { txId: string })?.txId);
+  });
+
   // ---- local mode: mirror-node shaped reads + test wallet ----
   const local = f.local;
   if (local) {
