@@ -167,6 +167,9 @@ export class HexeraWallet {
 
   /** Turn an on-chain deposit into vouchers. */
   async redeemDeposit(txId: string, worldId?: WorldIdProof, onProgress?: (done: number, total: number) => void) {
+    // Check the epoch key is on HCS *before* turning the deposit into a credit,
+    // so a refused key can't strand the deposit.
+    await this.epochKey((await this.supported(true)).currentEpoch);
     const credit = await this.call<{ credit: string; units: number; amountBase: string }>("/deposit/verify", { txId, worldId });
     this.log(`deposit credited: ${credit.units} units`);
     const bought = await this.buy(credit.credit, credit.units, onProgress);
