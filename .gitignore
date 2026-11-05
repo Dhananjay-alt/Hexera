@@ -1,7 +1,9 @@
 node_modules/
 .next/
 dist/
-data/
+# runtime state: databases, epoch signing keys, generated testnet.env. Fixtures may live in data/fixtures/.
+data/*
+!data/fixtures/
 .env
 .env.local
 *.sqlite
