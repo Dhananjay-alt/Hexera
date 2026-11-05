@@ -1,18 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  AlertCircle,
-  ArrowUpRight,
-  Check,
-  ChevronRight,
-  CircleDot,
-  EyeOff,
-  Loader2,
-  Lock,
-  Newspaper,
-  ShieldCheck,
-  Wallet,
-} from "lucide-react";
+import { AlertCircle, ArrowRight, ArrowUpRight, Check, ChevronRight, CircleDot, Eye, EyeOff, Loader2, Sprout, Wallet } from "lucide-react";
 import { HexeraError, type SupportedInfo, type WorldIdProof } from "@hexera/client";
 import { formatUsdc } from "@hexera/core";
 import { hashscanTxUrl } from "@hexera/hedera/mirror";
@@ -180,292 +168,311 @@ export default function Reader() {
 
   return (
     <>
-      <header className="topbar">
-        <div className="topbar-inner">
-          <a className="brand" href="/">
-            <span className="brand-mark">
-              <Lock size={14} strokeWidth={2} />
+      <header className="nav">
+        <a className="brand" href="/">
+          <Sprout size={22} strokeWidth={1.5} />
+          Hexera
+        </a>
+        <nav className="nav-links" aria-label="Sections">
+          <a href="#read">Publishers</a>
+          <a href="#wallet">Wallet</a>
+          <a href="#how">How it works</a>
+        </nav>
+        <div className="nav-end">
+          {info && (
+            <span className="badge badge-sm badge-line net-badge">
+              <span className="dot" />
+              {info.network} · epoch {info.currentEpoch}
             </span>
-            Hexera
-            <span className="badge badge-soft">Reader</span>
+          )}
+          <a className="btn btn-forest" href={AUDIT_URL} target="_blank" rel="noreferrer">
+            Open the audit
+            <ArrowUpRight size={16} strokeWidth={1.5} />
           </a>
-          <div className="topbar-actions">
-            {info && (
-              <span className="badge badge-outline net-badge">
-                <span className="dot" />
-                {info.network} · epoch {info.currentEpoch}
-              </span>
-            )}
-            <a className="btn btn-outline" href={AUDIT_URL} target="_blank" rel="noreferrer">
-              Audit
-              <ArrowUpRight size={14} />
-            </a>
-          </div>
         </div>
       </header>
 
       <main className="page">
         {fatal && (
-          <div className="banner" role="alert">
+          <div className="notice panel-keylime" role="alert" style={{ marginBottom: 14 }}>
             <AlertCircle size={16} />
-            {fatal}
+            <span>
+              <b>Not connected.</b> {fatal}
+            </span>
           </div>
         )}
 
         <section className="hero">
-          <div>
-            <p className="eyebrow">Private x402 on Hedera</p>
-            <h1 className="display">
-              Pay per article.
-              <br />
-              Leave no trail.
-            </h1>
-            <p className="lede">
-              Every read is paid with a blind-signed voucher. The chain, the facilitator and the publisher each see that a valid payment happened — none of them see
-              that it was you.
-            </p>
+          <div className="panel panel-keylime hero-main">
+            <div>
+              <p className="eyebrow">Private x402 on Hedera</p>
+              <h1 className="display">
+                Pay per article.
+                <br />
+                Leave no trail.
+              </h1>
+              <p className="lede">
+                Every read is paid with a blind-signed voucher. The chain, the facilitator and the publisher each see that a valid payment happened. None of them see
+                that it was you.
+              </p>
+              <div className="hero-cta">
+                <a className="btn btn-forest" href="#wallet">
+                  Deposit and start reading
+                  <ArrowRight size={16} strokeWidth={1.5} />
+                </a>
+                <a className="btn btn-paper" href="#how">
+                  How it works
+                </a>
+              </div>
+            </div>
+            <div className="stats">
+              <div>
+                <div className="stat-label">Vouchers</div>
+                <div className="stat-value">{balance.units.toLocaleString()}</div>
+                <div className="stat-sub">{balance.usdc} USDC</div>
+              </div>
+              <div>
+                <div className="stat-label">Paid reads</div>
+                <div className="stat-value">{paid}</div>
+                <div className="stat-sub">this session</div>
+              </div>
+              <div>
+                <div className="stat-label">Publishers</div>
+                <div className="stat-value">{pubs.length}</div>
+                <div className="stat-sub">one wallet</div>
+              </div>
+            </div>
           </div>
-          <div className="stats">
-            <div>
-              <div className="stat-label">Vouchers</div>
-              <div className="stat-value">{balance.units.toLocaleString()}</div>
-              <div className="stat-sub">{balance.usdc} USDC</div>
+
+          <div className="panel panel-slate preview" aria-label="Who saw what">
+            <div className="preview-head">
+              <p className="eyebrow" style={{ margin: 0 }}>
+                Who saw what
+              </p>
+              <span className="badge badge-sm">{last ? `${last.publisher} · ${last.units} vouchers` : "Open an article"}</span>
             </div>
-            <div>
-              <div className="stat-label">Paid reads</div>
-              <div className="stat-value">{paid}</div>
-              <div className="stat-sub">this session</div>
-            </div>
-            <div>
-              <div className="stat-label">Publishers</div>
-              <div className="stat-value">{pubs.length}</div>
-              <div className="stat-sub">one wallet</div>
-            </div>
+            {[
+              { name: "The chain", sees: last ? `Burn ${shortTx(last.tx)}` : "Anonymous serial burns", hides: "Who paid", mono: !!last },
+              { name: "The publisher", sees: "A valid payment arrived", hides: "Your account or deposit", mono: false },
+              { name: "The facilitator", sees: "Serials redeemed by a merchant", hides: "Which depositor owns them", mono: false },
+            ].map((r) => (
+              <div key={r.name} className="preview-card">
+                <div className="who">
+                  <h3 className="h-sm">{r.name}</h3>
+                </div>
+                <span className="sees">
+                  <Eye size={15} strokeWidth={1.5} />
+                  <span className={r.mono ? "mono" : undefined}>{r.sees}</span>
+                </span>
+                <span className="hides">
+                  <EyeOff size={15} strokeWidth={1.5} />
+                  {r.hides}
+                </span>
+              </div>
+            ))}
           </div>
         </section>
 
-        <div className="grid">
-          <div className="col">
-            {opened ? (
-              <article className="card">
-                <div className="article">
-                  <nav className="breadcrumb" aria-label="Breadcrumb">
-                    <button suppressHydrationWarning onClick={() => setOpened(null)}>Publishers</button>
-                    <ChevronRight size={14} />
-                    <button suppressHydrationWarning onClick={() => setOpened(null)}>{opened.pub.name}</button>
-                    <ChevronRight size={14} />
-                    <span className="current">{opened.meta.title}</span>
+        <section className="section" id="read">
+          <div className="main-grid">
+            <div className="col">
+              {opened ? (
+                <article className="panel panel-keylime">
+                  <nav className="crumbs" aria-label="Breadcrumb">
+                    <button suppressHydrationWarning onClick={() => setOpened(null)}>
+                      Publishers
+                    </button>
+                    <ChevronRight size={14} strokeWidth={1.5} />
+                    <button suppressHydrationWarning onClick={() => setOpened(null)}>
+                      {opened.pub.name}
+                    </button>
+                    <ChevronRight size={14} strokeWidth={1.5} />
+                    <span>{opened.meta.title}</span>
                   </nav>
-                  <h1>{opened.meta.title}</h1>
-                  {opened.loading && (
-                    <>
-                      <div className="status-line">
-                        <Loader2 size={14} className="spin" />
-                        402 Payment Required → paying {opened.meta.price} {opened.meta.price === 1 ? "voucher" : "vouchers"}…
-                      </div>
-                      <div className="skeleton" aria-hidden>
-                        <div style={{ width: "92%" }} />
-                        <div style={{ width: "86%" }} />
-                        <div style={{ width: "64%" }} />
-                      </div>
-                    </>
-                  )}
-                  {opened.error && (
-                    <p className="error-text" role="alert">
-                      <AlertCircle size={16} />
-                      {opened.error}
-                    </p>
-                  )}
-                  {opened.body?.map((p, i) => <p key={i}>{p}</p>)}
-                </div>
-                {opened.tx && (
-                  <div className="card-footer">
-                    <div className="receipt">
-                      <div className="receipt-item">
-                        <div className="k">Paid</div>
-                        <div className="v">
-                          {opened.units} vouchers · {usdcOfUnits(opened.units ?? 0)} USDC
+                  <div className="paper reading">
+                    <p className="eyebrow">{opened.pub.name}</p>
+                    <h1 className="h">{opened.meta.title}</h1>
+                    {opened.loading && (
+                      <>
+                        <div className="paying">
+                          <Loader2 size={16} strokeWidth={1.5} className="spin" />
+                          402 Payment Required: paying {opened.meta.price} {opened.meta.price === 1 ? "voucher" : "vouchers"}…
                         </div>
+                        <div className="ghost-lines" aria-hidden>
+                          <div style={{ width: "92%" }} />
+                          <div style={{ width: "84%" }} />
+                          <div style={{ width: "60%" }} />
+                        </div>
+                      </>
+                    )}
+                    {opened.error && (
+                      <div className="notice panel-keylime" role="alert">
+                        <AlertCircle size={16} />
+                        <span>
+                          <b>Payment refused.</b> {opened.error}
+                        </span>
                       </div>
-                      <div className="receipt-item">
-                        <div className="k">Burned on HCS</div>
-                        <div className="v mono">
-                          <a href={txLink(opened.tx)} target="_blank" rel="noreferrer">
+                    )}
+                    {opened.body?.map((p, i) => <p key={i}>{p}</p>)}
+                  </div>
+                  {opened.tx && (
+                    <div className="panel panel-slate" style={{ marginTop: 14, padding: 28 }}>
+                      <p className="eyebrow" style={{ margin: 0 }}>
+                        Receipt
+                      </p>
+                      <div className="receipt">
+                        <div className="paper">
+                          <span className="field-label">Paid</span>
+                          <span className="v">
+                            {opened.units} vouchers · {usdcOfUnits(opened.units ?? 0)} USDC
+                          </span>
+                        </div>
+                        <div className="paper">
+                          <span className="field-label">Burned on HCS</span>
+                          <a className="v mono" href={txLink(opened.tx)} target="_blank" rel="noreferrer">
                             {opened.tx}
                           </a>
                         </div>
-                      </div>
-                      <div className="receipt-item">
-                        <div className="k">{opened.pub.name} saw</div>
-                        <div className="v">A valid payment. No account, no deposit, no history.</div>
+                        <div className="paper">
+                          <span className="field-label">{opened.pub.name} saw</span>
+                          <span className="v">A valid payment. No account, no deposit, no history.</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </article>
-            ) : (
-              pubs.map((p) => (
-                <section key={p.id} className="card">
-                  <div className="card-header">
+                  )}
+                </article>
+              ) : (
+                pubs.map((p, i) => (
+                  <section key={p.id} className={`panel ${i % 2 === 0 ? "panel-keylime" : "panel-mint"}`}>
                     <div className="pub-head">
-                      <span className="icon-chip">
-                        <Newspaper size={16} />
-                      </span>
                       <div>
-                        <h2 className="card-title">{p.name}</h2>
-                        <p className="card-desc">{p.tagline}</p>
+                        <p className="eyebrow">Publisher</p>
+                        <h2 className="h">{p.name}</h2>
+                        <p className="muted" style={{ margin: "4px 0 0" }}>
+                          {p.tagline}
+                        </p>
                       </div>
+                      <span className="badge">{p.articles.length} articles</span>
                     </div>
-                    <span className="badge badge-soft">{p.articles.length} articles</span>
-                  </div>
-                  <ul className="article-list">
-                    {p.articles.map((a) => (
-                      <li key={a.slug}>
-                        <button suppressHydrationWarning className="article-row" onClick={() => open(p, a)} disabled={!info}>
-                          <span className="article-title">{a.title}</span>
-                          <span className="article-teaser">{a.teaser}</span>
-                          <span className="article-meta">
-                            <span className="badge badge-outline">
-                              {a.price} {a.price === 1 ? "voucher" : "vouchers"}
+                    <ul className="article-list">
+                      {p.articles.map((a) => (
+                        <li key={a.slug}>
+                          <button suppressHydrationWarning className="article-row" onClick={() => open(p, a)} disabled={!info}>
+                            <span className="article-title">{a.title}</span>
+                            <span className="article-teaser">{a.teaser}</span>
+                            <span className="article-meta">
+                              <span className="badge badge-sm">
+                                {a.price} {a.price === 1 ? "voucher" : "vouchers"}
+                              </span>
+                              <span className="mono">{usdcOfUnits(a.price)} USDC</span>
+                              <ArrowRight size={16} strokeWidth={1.5} />
                             </span>
-                            <span className="mono">{usdcOfUnits(a.price)} USDC</span>
-                            <ChevronRight size={16} className="chev" />
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ))
-            )}
-          </div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))
+              )}
+            </div>
 
-          <aside className="col aside">
-            <section className="card">
-              <div className="card-header">
-                <div>
-                  <h2 className="card-title">Wallet</h2>
-                  <p className="card-desc">Vouchers live only in this browser.</p>
-                </div>
-                <span className="icon-chip">
-                  <Wallet size={16} />
-                </span>
-              </div>
-              <div className="card-body stack">
-                <div>
-                  <div className="balance">
-                    <span className="balance-value">{balance.units.toLocaleString()}</span>
-                    <span className="balance-unit">vouchers</span>
+            <aside className="col" id="wallet">
+              <section className="panel panel-sage">
+                <div className="wallet-head">
+                  <div>
+                    <p className="eyebrow">Wallet</p>
+                    <h2 className="h-sm">Vouchers live only in this browser.</h2>
                   </div>
-                  <div className="wallet-meta">
-                    <span>= {balance.usdc} USDC</span>
-                    <span className="mono">{account || "…"}</span>
-                  </div>
+                  <Wallet size={22} strokeWidth={1.5} color="#0f3e17" />
                 </div>
-                <div className="divider" />
-                <label className="field">
-                  <span className="field-label">Demo account</span>
-                  <select suppressHydrationWarning className="select" value={user} onChange={(e) => setUser(e.target.value as "1" | "2")}>
-                    {USERS.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.label}
-                      </option>
-                    ))}
-                  </select>
-                  {walletBal && <span className="hint">On-chain balance {formatUsdc(BigInt(walletBal))} USDC</span>}
-                </label>
-                <label className="field">
-                  <span className="field-label">Deposit</span>
-                  <span className="input-suffix">
-                    <input suppressHydrationWarning className="input" value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
-                    <span>USDC</span>
-                  </span>
-                  {info && amountBase > freeLimit && (
-                    <span className="hint">
-                      Above {formatUsdc(freeLimit)} USDC/day needs one unique human · cap {formatUsdc(BigInt(info.limits.humanDailyCapBase))} USDC/day per human
+                <div className="balance">
+                  <span className="balance-value">{balance.units.toLocaleString()}</span>
+                  <span className="field-label">vouchers</span>
+                </div>
+                <div className="balance-meta">
+                  <span>= {balance.usdc} USDC</span>
+                  <span className="mono">{account || "…"}</span>
+                </div>
+
+                <div className="form">
+                  <label className="field">
+                    <span className="field-label">Demo account</span>
+                    <select suppressHydrationWarning className="select" value={user} onChange={(e) => setUser(e.target.value as "1" | "2")}>
+                      {USERS.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.label}
+                        </option>
+                      ))}
+                    </select>
+                    {walletBal && <span className="hint">On-chain balance {formatUsdc(BigInt(walletBal))} USDC</span>}
+                  </label>
+                  <label className="field">
+                    <span className="field-label">Deposit</span>
+                    <span className="input-wrap">
+                      <input suppressHydrationWarning className="input" value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" />
+                      <span>USDC</span>
                     </span>
-                  )}
-                </label>
-                {info && (
-                  <WorldIdButton
-                    mode={info.worldId.mode}
-                    appId={info.worldId.appId}
-                    action={info.worldId.action}
-                    signal={account}
-                    devHuman={USERS.find((u) => u.id === user)!.human}
-                    proof={proof}
-                    onProof={setProof}
-                  />
-                )}
-                <button suppressHydrationWarning className="btn btn-primary btn-block" onClick={deposit} disabled={!!busy || !info || !account}>
-                  {busy ? (
-                    <>
-                      <Loader2 size={14} className="spin" />
-                      {busy}
-                    </>
-                  ) : (
-                    `Deposit ${amount} USDC`
-                  )}
-                </button>
-                {depositErr && (
-                  <p className="hint error-text" role="alert">
-                    <AlertCircle size={14} />
-                    {depositErr}
-                  </p>
-                )}
-              </div>
-            </section>
-
-            <section className="card">
-              <div className="card-header">
-                <div>
-                  <h2 className="card-title">Who saw what</h2>
-                  <p className="card-desc">{last ? `Your last read: ${last.publisher}, ${last.units} vouchers` : "Open an article to see each party's view."}</p>
-                </div>
-                <span className="icon-chip">
-                  <ShieldCheck size={16} />
-                </span>
-              </div>
-              <div className="card-body">
-                <ul className="parties">
-                  {[
-                    { name: "Chain", sees: last ? `Burn ${shortTx(last.tx)}` : "Anonymous serial burns", hides: "Who paid" },
-                    { name: "Publisher", sees: "A valid payment", hides: "Your account or deposit" },
-                    { name: "Facilitator", sees: "Serials redeemed by a merchant", hides: "Which depositor owns them" },
-                  ].map((r) => (
-                    <li key={r.name} className="party">
-                      <span className="party-name">{r.name}</span>
-                      <span className="party-sees">
-                        <span className="sees">
-                          <Check size={14} />
-                          <span className={r.name === "Chain" && last ? "mono" : undefined}>{r.sees}</span>
-                        </span>
-                        <span className="hidden">
-                          <EyeOff size={14} />
-                          {r.hides}
-                        </span>
+                    {info && amountBase > freeLimit && (
+                      <span className="hint">
+                        Above {formatUsdc(freeLimit)} USDC a day needs one unique human. Cap: {formatUsdc(BigInt(info.limits.humanDailyCapBase))} USDC a day per human.
                       </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </section>
+                    )}
+                  </label>
+                  {info && (
+                    <WorldIdButton
+                      mode={info.worldId.mode}
+                      appId={info.worldId.appId}
+                      action={info.worldId.action}
+                      signal={account}
+                      devHuman={USERS.find((u) => u.id === user)!.human}
+                      proof={proof}
+                      onProof={setProof}
+                    />
+                  )}
+                  <button suppressHydrationWarning className="btn btn-forest btn-block" onClick={deposit} disabled={!!busy || !info || !account}>
+                    {busy ? (
+                      <>
+                        <Loader2 size={16} strokeWidth={1.5} className="spin" />
+                        {busy}
+                      </>
+                    ) : (
+                      <>
+                        Deposit {amount} USDC
+                        <ArrowRight size={16} strokeWidth={1.5} />
+                      </>
+                    )}
+                  </button>
+                  {depositErr && (
+                    <div className="notice deposit-error" role="alert">
+                      <AlertCircle size={16} />
+                      <span>
+                        <b>Refused.</b> {depositErr}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </section>
 
-            <section className="card">
-              <div className="card-header">
-                <h2 className="card-title">Activity</h2>
-                <span className="badge badge-soft">{log.length}</span>
-              </div>
-              <div className="card-body">
+              <section className="panel panel-mint" style={{ padding: 28 }}>
+                <div className="wallet-head">
+                  <div>
+                    <p className="eyebrow">Activity</p>
+                    <h2 className="h-sm">What just happened</h2>
+                  </div>
+                  <span className="badge badge-sm">{log.length}</span>
+                </div>
                 {log.length === 0 ? (
                   <p className="empty">Deposit, then open an article.</p>
                 ) : (
                   <ul className="log">
                     {log.map((l, i) => (
                       <li key={i} className={`line ${l.kind}`}>
-                        {l.kind === "err" ? <AlertCircle size={14} /> : l.kind === "ok" ? <Check size={14} /> : <CircleDot size={14} />}
+                        {l.kind === "err" ? <AlertCircle size={15} /> : l.kind === "ok" ? <Check size={15} /> : <CircleDot size={15} strokeWidth={1.5} />}
                         <span>
-                          <span className="line-text">{l.text}</span>
+                          <span className="line-text">
+                            {l.kind === "err" && "Refused: "}
+                            {l.text}
+                          </span>
                           <br />
                           <span className="line-at">{l.at}</span>
                         </span>
@@ -473,10 +480,37 @@ export default function Reader() {
                     ))}
                   </ul>
                 )}
-              </div>
-            </section>
-          </aside>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <div className="strip" aria-label="Built on">
+          <span>Hedera Consensus Service</span>
+          <span>Hedera Token Service</span>
+          <span>Mirror Node</span>
+          <span>RFC 9474</span>
+          <span>x402</span>
+          <span>World ID</span>
         </div>
+
+        <section className="section" id="how">
+          <p className="eyebrow">How it works</p>
+          <h2 className="h-lg">Card-network privacy, on a public ledger.</h2>
+          <ul className="faq">
+            {[
+              ["What does the chain see?", "Your one deposit to Hexera, anonymous serial hashes burned on the hexera-spent topic for each read, and a batched payout to each publisher. Nothing links your deposit to any article."],
+              ["Why can't the facilitator link me?", "It signs your vouchers blind (RFC 9474): it never sees a serial until it is spent, and then it can't tell whose it was. It knows who deposited, not who read what."],
+              ["What stops double spending?", "Every spent serial is written to a public HCS topic. Consensus order decides races, and the earliest timestamp wins. Anyone can check it on the audit page."],
+              ["Why World ID?", "Deposits above a small free limit need one unique human, so a single person can't dodge the daily cap with many free accounts. Proof of Human is the minimum that proves it."],
+            ].map(([q, a]) => (
+              <li key={q}>
+                <h3 className="q">{q}</h3>
+                <p className="a">{a}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <footer className="footer">
           <span>hexera-ecash · RFC 9474 blind signatures · HCS double-spend registry · HTS batch payouts</span>
