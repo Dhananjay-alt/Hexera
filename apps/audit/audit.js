@@ -30,6 +30,14 @@ function txLink(cfg, tx) {
   return `<a href="https://hashscan.io/${cfg.network.replace("hedera:", "")}/transaction/${esc(id)}" target="_blank">${esc(tx)}</a>`;
 }
 const time = (ts) => new Date(Number(ts.split(".")[0]) * 1000).toLocaleString();
+const ICON = {
+  check: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  x: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  alert: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+};
+const table = (head, rows, empty) =>
+  `<thead><tr>${head.map(([h, cls]) => `<th${cls ? ` class="${cls}"` : ""}>${h}</th>`).join("")}</tr></thead>` +
+  `<tbody>${rows.length ? rows.join("") : `<tr><td class="empty" colspan="${head.length}">${empty}</td></tr>`}</tbody>`;
 
 async function main() {
   const cfg = await (await fetch("/config.json")).json();
@@ -38,7 +46,12 @@ async function main() {
     cfg.spentTopic ??= s.topics.spent;
     cfg.ledgerTopic ??= s.topics.ledger;
   }
-  $("src").innerHTML = `mirror ${esc(cfg.mirrorUrl)} · hexera-spent <span class="mono">${esc(cfg.spentTopic)}</span> · hexera-ledger <span class="mono">${esc(cfg.ledgerTopic)}</span>`;
+  $("net").innerHTML = `<span class="dot"></span>${esc(cfg.network)}`;
+  $("src").innerHTML = [
+    `<span class="badge badge-outline">mirror <span class="mono">${esc(cfg.mirrorUrl.replace(/^https?:\/\//, ""))}</span></span>`,
+    `<span class="badge badge-outline">hexera-spent <span class="mono">${esc(cfg.spentTopic)}</span></span>`,
+    `<span class="badge badge-outline">hexera-ledger <span class="mono">${esc(cfg.ledgerTopic)}</span></span>`,
+  ].join("");
 
   const [spent, ledger] = await Promise.all([messages(cfg.mirrorUrl, cfg.spentTopic), messages(cfg.mirrorUrl, cfg.ledgerTopic)]);
   const by = (t) => ledger.filter((m) => m.d.t === t);
@@ -74,37 +87,53 @@ async function main() {
     paidUnits += x.units;
   }
 
-  const card = (n, l) => `<div class="card"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  const stat = (n, l, sub) => `<div class="stat"><div class="stat-label">${l}</div><div class="stat-value">${n}</div><div class="stat-sub">${sub}</div></div>`;
   $("cards").innerHTML = [
-    card(usdc(depositedBase), `USDC deposited (${deposits.length} deposits)`),
-    card(credited, "voucher units credited"),
-    card(issuedDeposit + issuedExchange, `units issued (${issuedExchange} via epoch exchange)`),
-    card(spentUnits, "units spent at merchants"),
-    card(paidUnits, `units paid out (${payouts.length} batches)`),
-    card(spentUnits - paidUnits, "units awaiting payout"),
+    stat(usdc(depositedBase), "Deposited", `USDC · ${deposits.length} deposits`),
+    stat(credited.toLocaleString(), "Credited", "voucher units"),
+    stat((issuedDeposit + issuedExchange).toLocaleString(), "Issued", `${issuedExchange} via epoch exchange`),
+    stat(spentUnits.toLocaleString(), "Spent", "units at merchants"),
+    stat(paidUnits.toLocaleString(), "Paid out", `${payouts.length} HTS batches`),
+    stat((spentUnits - paidUnits).toLocaleString(), "Pending", "awaiting payout"),
   ].join("");
 
-  const chk = (ok, text) => `<div class="${ok ? "ok" : "err"}">${ok ? "✔" : "✘"} ${text}</div>`;
-  $("checks").innerHTML = [
-    chk(issuedDeposit <= credited, `issued ≤ credited: ${issuedDeposit} ≤ ${credited} (no unbacked vouchers)`),
-    chk(spentUnits + exchanged <= issuedDeposit + issuedExchange || issued.length === 0,
-      `spent + exchanged ≤ issued: ${spentUnits + exchanged} ≤ ${issuedDeposit + issuedExchange}${issued.length === 0 ? " (issuance counts are published with the next payout)" : ""}`),
-    chk(paidUnits <= spentUnits, `paid ≤ spent: ${paidUnits} ≤ ${spentUnits}`),
-    chk(dupes === 0, `double spends on hexera-spent: ${dupes} (earliest consensus timestamp wins)`),
-  ].join("");
+  const checks = [
+    [issuedDeposit <= credited, "No unbacked vouchers", `issued ≤ credited: ${issuedDeposit} ≤ ${credited}`],
+    [spentUnits + exchanged <= issuedDeposit + issuedExchange || issued.length === 0, "No spending beyond issuance",
+      `spent + exchanged ≤ issued: ${spentUnits + exchanged} ≤ ${issuedDeposit + issuedExchange}${issued.length === 0 ? " (issuance counts are published with the next payout)" : ""}`],
+    [paidUnits <= spentUnits, "No payouts beyond spending", `paid ≤ spent: ${paidUnits} ≤ ${spentUnits}`],
+    [dupes === 0, "No double spends", `${dupes} duplicate spend ids on hexera-spent; the earliest consensus timestamp wins`],
+  ];
+  const failed = checks.filter((c) => !c[0]).length;
+  $("checks-badge").innerHTML = failed ? `<span class="badge badge-err">${failed} failing</span>` : `<span class="badge badge-solid">All ${checks.length} pass</span>`;
+  $("checks").innerHTML = checks
+    .map(([ok, t, d]) => `<li class="check${ok ? "" : " fail"}"><span class="tick">${ok ? ICON.check : ICON.x}</span><span><div class="t">${t}</div><div class="d">${d}</div></span></li>`)
+    .join("");
 
-  $("merchants").innerHTML = `<tr><th>merchant</th><th>account</th><th>burned</th><th>paid</th><th>pending</th></tr>` +
-    Object.entries(perMerchant).map(([id, m]) => `<tr><td>${esc(id)}</td><td class="mono">${esc(m.account || "—")}</td><td>${m.burned}</td><td>${m.paid}</td><td>${m.burned - m.paid}</td></tr>`).join("");
+  $("merchants").innerHTML = table(
+    [["Merchant"], ["Account"], ["Burned", "num"], ["Paid", "num"], ["Pending", "num"]],
+    Object.entries(perMerchant).map(([id, m]) => `<tr><td>${esc(id)}</td><td class="mono">${esc(m.account || "—")}</td><td class="num">${m.burned}</td><td class="num">${m.paid}</td><td class="num">${m.burned - m.paid}</td></tr>`),
+    "No spends yet",
+  );
 
-  $("keys").innerHTML = `<tr><th>epoch</th><th>fingerprint</th><th>valid</th><th>published</th></tr>` +
-    keys.map((k) => `<tr><td>${k.d.epoch}</td><td class="mono">${esc(k.d.fingerprint)}</td><td>${esc(k.d.validFrom.slice(0, 16))} → ${esc(k.d.validTo.slice(0, 16))}</td><td>${time(k.ts)} (seq ${k.seq})</td></tr>`).join("");
+  $("keys").innerHTML = table(
+    [["Epoch"], ["Fingerprint"], ["Valid"]],
+    keys.map((k) => `<tr><td>${k.d.epoch}</td><td class="mono" title="${esc(k.d.fingerprint)}">${esc(k.d.fingerprint.slice(0, 16))}…</td><td><div>${esc(k.d.validFrom.slice(0, 10))} → ${esc(k.d.validTo.slice(0, 10))}</div><div class="muted">published ${time(k.ts)} · seq ${k.seq}</div></td></tr>`),
+    "No epoch keys published",
+  );
 
-  $("payouts").innerHTML = `<tr><th>batch</th><th>when</th><th>merchants</th><th>units</th><th>HTS transaction</th></tr>` +
-    payouts.slice().reverse().map((p) => `<tr><td class="mono">${esc(p.d.batchId)}</td><td>${time(p.ts)}</td><td>${p.d.merchants.map((x) => `${esc(x.merchant)}: ${x.units}`).join("<br>")}</td><td>${p.d.totalUnits}</td><td class="mono">${txLink(cfg, p.d.transactionId)}</td></tr>`).join("");
+  $("payouts").innerHTML = table(
+    [["Batch"], ["When"], ["Merchants"], ["Units", "num"], ["HTS transaction"]],
+    payouts.slice().reverse().map((p) => `<tr><td class="mono">${esc(p.d.batchId)}</td><td>${time(p.ts)}</td><td>${p.d.merchants.map((x) => `${esc(x.merchant)} <span class="muted">${x.units}</span>`).join("<br>")}</td><td class="num">${p.d.totalUnits}</td><td class="mono">${txLink(cfg, p.d.transactionId)}</td></tr>`),
+    "No payouts yet",
+  );
 
-  $("spent").innerHTML = `<tr><th>seq</th><th>consensus time</th><th>merchant</th><th>units</th><th>spend ids</th><th>request hash</th></tr>` +
-    spent.slice(-25).reverse().map((m) => `<tr><td>${m.seq}</td><td>${time(m.ts)}</td><td>${esc(m.d.merchant)}</td><td>${m.d.units}</td><td class="mono">${m.d.spentIds.map((x) => esc(x.slice(0, 16)) + "…").join("<br>")}</td><td class="mono">${esc(String(m.d.requestHash).slice(0, 16))}…</td></tr>`).join("");
+  $("spent").innerHTML = table(
+    [["Seq"], ["Consensus time"], ["Merchant"], ["Units", "num"], ["Spend ids"], ["Request hash"]],
+    spent.slice(-25).reverse().map((m) => `<tr><td>${m.seq}</td><td>${time(m.ts)}</td><td>${esc(m.d.merchant)}</td><td class="num">${m.d.units}</td><td class="mono">${m.d.spentIds.map((x) => esc(x.slice(0, 16)) + "…").join("<br>")}</td><td class="mono">${esc(String(m.d.requestHash).slice(0, 16))}…</td></tr>`),
+    "No spent messages yet",
+  );
 }
 
-main().catch((e) => { document.querySelector("main").insertAdjacentHTML("beforeend", `<p class="err">${esc(e.message)}</p>`); });
+main().catch((e) => { document.querySelector(".hero").insertAdjacentHTML("beforeend", `<div class="error" role="alert">${ICON.alert}${esc(e.message)}</div>`); });
 setInterval(() => main().catch(() => {}), 10000);

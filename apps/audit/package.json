@@ -4,5 +4,6 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "scripts": { "start": "tsx serve.ts" }
+  "scripts": { "start": "tsx serve.ts" },
+  "dependencies": { "geist": "^1.9.1" }
 }

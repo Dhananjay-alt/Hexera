@@ -7,6 +7,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 if (existsSync(".env")) process.loadEnvFile(".env");
 const dir = dirname(fileURLToPath(import.meta.url));
@@ -25,12 +26,23 @@ const files: Record<string, [string, string]> = {
   "/": ["index.html", "text/html; charset=utf-8"],
   "/audit.js": ["audit.js", "text/javascript; charset=utf-8"],
 };
+// Geist is served from the local geist package: no font CDN, no third-party requests.
+const require = createRequire(import.meta.url);
+const geistFonts = join(dirname(require.resolve("geist/font/sans")), "fonts");
+const fonts: Record<string, string> = {
+  "/fonts/Geist-Variable.woff2": join(geistFonts, "geist-sans", "Geist-Variable.woff2"),
+  "/fonts/GeistMono-Variable.woff2": join(geistFonts, "geist-mono", "GeistMono-Variable.woff2"),
+};
 
 createServer((req, res) => {
   const path = (req.url ?? "/").split("?")[0];
   if (path === "/config.json") {
     res.writeHead(200, { "content-type": "application/json" });
     return res.end(JSON.stringify(config));
+  }
+  if (fonts[path]) {
+    res.writeHead(200, { "content-type": "font/woff2", "cache-control": "public, max-age=31536000, immutable" });
+    return res.end(readFileSync(fonts[path]));
   }
   const f = files[path];
   if (!f) {
