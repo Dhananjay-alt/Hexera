@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertCircle, ArrowRight, ArrowUpRight, Check, ChevronRight, CircleDot, Eye, EyeOff, Loader2, Sprout, Wallet } from "lucide-react";
+import { AlertCircle, ArrowRight, Blocks, Check, ChevronRight, Eye, EyeOff, Loader2, Lock, Newspaper, Server, ShieldCheck } from "lucide-react";
 import { HexeraError, type SupportedInfo, type WorldIdProof } from "@hexera/client";
 import { formatUsdc } from "@hexera/core";
 import { hashscanTxUrl } from "@hexera/hedera/mirror";
@@ -168,108 +168,116 @@ export default function Reader() {
 
   return (
     <>
-      <header className="nav">
-        <a className="brand" href="/">
-          <Sprout size={22} strokeWidth={1.5} />
-          Hexera
-        </a>
-        <nav className="nav-links" aria-label="Sections">
-          <a href="#read">Publishers</a>
-          <a href="#wallet">Wallet</a>
-          <a href="#how">How it works</a>
-        </nav>
-        <div className="nav-end">
-          {info && (
-            <span className="badge badge-sm badge-line net-badge">
-              <span className="dot" />
-              {info.network} · epoch {info.currentEpoch}
+      <header className="topbar">
+        <div className="topbar-inner">
+          <a className="logo" href="/">
+            <span className="logo-glyph">
+              <Lock size={11} strokeWidth={2.5} />
             </span>
-          )}
-          <a className="btn btn-forest" href={AUDIT_URL} target="_blank" rel="noreferrer">
-            Open the audit
-            <ArrowUpRight size={16} strokeWidth={1.5} />
+            Hexera
           </a>
+          <div className="topbar-end">
+            <a className="navlink" href="#read">
+              Publishers
+            </a>
+            <a className="navlink" href="#wallet">
+              Wallet
+            </a>
+            <a className="navlink" href="#how">
+              How it works
+            </a>
+            {info && (
+              <span className="pill net-pill">
+                <span className="dot dot-live" />
+                {info.network} · epoch {info.currentEpoch}
+              </span>
+            )}
+            <a className="btn btn-pill" href={AUDIT_URL} target="_blank" rel="noreferrer">
+              Open the audit
+            </a>
+          </div>
         </div>
       </header>
 
       <main className="page">
         {fatal && (
-          <div className="notice panel-keylime" role="alert" style={{ marginBottom: 14 }}>
-            <AlertCircle size={16} />
-            <span>
-              <b>Not connected.</b> {fatal}
-            </span>
+          <div className="notice notice-err" role="alert" style={{ marginTop: 24 }}>
+            <AlertCircle size={15} />
+            <span className="msg">{fatal}</span>
           </div>
         )}
 
         <section className="hero">
-          <div className="panel panel-keylime hero-main">
-            <div>
-              <p className="eyebrow">Private x402 on Hedera</p>
-              <h1 className="display">
-                Pay per article.
-                <br />
-                Leave no trail.
-              </h1>
-              <p className="lede">
-                Every read is paid with a blind-signed voucher. The chain, the facilitator and the publisher each see that a valid payment happened. None of them see
-                that it was you.
-              </p>
-              <div className="hero-cta">
-                <a className="btn btn-forest" href="#wallet">
-                  Deposit and start reading
-                  <ArrowRight size={16} strokeWidth={1.5} />
-                </a>
-                <a className="btn btn-paper" href="#how">
-                  How it works
-                </a>
-              </div>
-            </div>
-            <div className="stats">
-              <div>
-                <div className="stat-label">Vouchers</div>
-                <div className="stat-value">{balance.units.toLocaleString()}</div>
-                <div className="stat-sub">{balance.usdc} USDC</div>
-              </div>
-              <div>
-                <div className="stat-label">Paid reads</div>
-                <div className="stat-value">{paid}</div>
-                <div className="stat-sub">this session</div>
-              </div>
-              <div>
-                <div className="stat-label">Publishers</div>
-                <div className="stat-value">{pubs.length}</div>
-                <div className="stat-sub">one wallet</div>
-              </div>
-            </div>
+          <div>
+            <h1 className="display">
+              Pay per article.
+              <br />
+              Leave no trail.
+            </h1>
+            <p className="lede">
+              Every read is paid with a blind-signed voucher. The chain, the facilitator and the publisher each see that a valid payment happened. None of them see that it
+              was you.
+            </p>
           </div>
+          <div className="hero-side">
+            <a className="link-arrow" href="#how">
+              How Hexera works
+              <ArrowRight size={15} />
+            </a>
+          </div>
+        </section>
 
-          <div className="panel panel-slate preview" aria-label="Who saw what">
-            <div className="preview-head">
-              <p className="eyebrow" style={{ margin: 0 }}>
-                Who saw what
-              </p>
-              <span className="badge badge-sm">{last ? `${last.publisher} · ${last.units} vouchers` : "Open an article"}</span>
-            </div>
-            {[
-              { name: "The chain", sees: last ? `Burn ${shortTx(last.tx)}` : "Anonymous serial burns", hides: "Who paid", mono: !!last },
-              { name: "The publisher", sees: "A valid payment arrived", hides: "Your account or deposit", mono: false },
-              { name: "The facilitator", sees: "Serials redeemed by a merchant", hides: "Which depositor owns them", mono: false },
-            ].map((r) => (
-              <div key={r.name} className="preview-card">
-                <div className="who">
-                  <h3 className="h-sm">{r.name}</h3>
-                </div>
-                <span className="sees">
-                  <Eye size={15} strokeWidth={1.5} />
-                  <span className={r.mono ? "mono" : undefined}>{r.sees}</span>
-                </span>
-                <span className="hides">
-                  <EyeOff size={15} strokeWidth={1.5} />
-                  {r.hides}
-                </span>
+        <section className="showcase" aria-label="Who saw what">
+          <div className="card card-flush">
+            <div className="card-head">
+              <div className="pub-meta">
+                <ShieldCheck size={15} color="#8a8f98" />
+                <h2 className="h-card">Who saw what</h2>
+                <span className="badge">{last ? `${last.publisher} · ${last.units} vouchers` : "open an article"}</span>
               </div>
-            ))}
+              <div className="console-meta">
+                <div className="m">
+                  <span className="label">Vouchers</span>
+                  <b>{balance.units.toLocaleString()}</b>
+                </div>
+                <div className="m">
+                  <span className="label">Paid reads</span>
+                  <b>{paid}</b>
+                </div>
+                <div className="m">
+                  <span className="label">Publishers</span>
+                  <b>{pubs.length}</b>
+                </div>
+              </div>
+            </div>
+            <ul className="rows">
+              {[
+                { name: "Chain", icon: <Blocks size={15} />, sees: last ? `burn ${last.tx}` : "anonymous serial burns", hides: "who paid", mono: !!last },
+                { name: "Publisher", icon: <Newspaper size={15} />, sees: "a valid payment arrived", hides: "your account or deposit", mono: false },
+                { name: "Facilitator", icon: <Server size={15} />, sees: "serials redeemed by a merchant", hides: "which depositor owns them", mono: false },
+              ].map((r) => (
+                <li key={r.name} className="party">
+                  <span className="party-name">
+                    {r.icon}
+                    {r.name}
+                  </span>
+                  <span className="party-cell">
+                    <span className="badge badge-ok">
+                      <Eye size={12} />
+                      sees
+                    </span>
+                    <span className={`t${r.mono ? " mono" : ""}`}>{r.sees}</span>
+                  </span>
+                  <span className="party-cell muted">
+                    <span className="badge">
+                      <EyeOff size={12} />
+                      never sees
+                    </span>
+                    <span className="t">{r.hides}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
@@ -277,95 +285,106 @@ export default function Reader() {
           <div className="main-grid">
             <div className="col">
               {opened ? (
-                <article className="panel panel-keylime">
+                <article className="card card-flush">
                   <nav className="crumbs" aria-label="Breadcrumb">
-                    <button suppressHydrationWarning onClick={() => setOpened(null)}>
+                    <button suppressHydrationWarning className="text-btn" onClick={() => setOpened(null)}>
                       Publishers
                     </button>
-                    <ChevronRight size={14} strokeWidth={1.5} />
-                    <button suppressHydrationWarning onClick={() => setOpened(null)}>
+                    <ChevronRight size={13} />
+                    <button suppressHydrationWarning className="text-btn" onClick={() => setOpened(null)}>
                       {opened.pub.name}
                     </button>
-                    <ChevronRight size={14} strokeWidth={1.5} />
-                    <span>{opened.meta.title}</span>
+                    <ChevronRight size={13} />
+                    <span className="cur">{opened.meta.title}</span>
                   </nav>
-                  <div className="paper reading">
-                    <p className="eyebrow">{opened.pub.name}</p>
-                    <h1 className="h">{opened.meta.title}</h1>
+                  <div className="reading">
+                    <span className="label">{opened.pub.name}</span>
+                    <h1 className="h-sub">{opened.meta.title}</h1>
                     {opened.loading && (
                       <>
                         <div className="paying">
-                          <Loader2 size={16} strokeWidth={1.5} className="spin" />
-                          402 Payment Required: paying {opened.meta.price} {opened.meta.price === 1 ? "voucher" : "vouchers"}…
+                          <Loader2 size={14} className="spin" />
+                          402 Payment Required → paying {opened.meta.price} {opened.meta.price === 1 ? "voucher" : "vouchers"}…
                         </div>
-                        <div className="ghost-lines" aria-hidden>
+                        <div className="skeleton" aria-hidden>
                           <div style={{ width: "92%" }} />
-                          <div style={{ width: "84%" }} />
-                          <div style={{ width: "60%" }} />
+                          <div style={{ width: "86%" }} />
+                          <div style={{ width: "62%" }} />
                         </div>
                       </>
                     )}
                     {opened.error && (
-                      <div className="notice panel-keylime" role="alert">
-                        <AlertCircle size={16} />
+                      <div className="notice notice-err" role="alert">
+                        <AlertCircle size={15} />
                         <span>
-                          <b>Payment refused.</b> {opened.error}
+                          Payment refused <span className="msg">· {opened.error}</span>
                         </span>
                       </div>
                     )}
-                    {opened.body?.map((p, i) => <p key={i}>{p}</p>)}
+                    {opened.body?.map((p, i) => (
+                      <p key={i} className="body">
+                        {p}
+                      </p>
+                    ))}
                   </div>
                   {opened.tx && (
-                    <div className="panel panel-slate" style={{ marginTop: 14, padding: 28 }}>
-                      <p className="eyebrow" style={{ margin: 0 }}>
-                        Receipt
-                      </p>
-                      <div className="receipt">
-                        <div className="paper">
-                          <span className="field-label">Paid</span>
-                          <span className="v">
-                            {opened.units} vouchers · {usdcOfUnits(opened.units ?? 0)} USDC
-                          </span>
-                        </div>
-                        <div className="paper">
-                          <span className="field-label">Burned on HCS</span>
-                          <a className="v mono" href={txLink(opened.tx)} target="_blank" rel="noreferrer">
-                            {opened.tx}
-                          </a>
-                        </div>
-                        <div className="paper">
-                          <span className="field-label">{opened.pub.name} saw</span>
-                          <span className="v">A valid payment. No account, no deposit, no history.</span>
-                        </div>
+                    <div className="receipt" style={{ borderTop: "1px solid var(--color-graphite)" }}>
+                      <div className="card-head">
+                        <span className="h-card" style={{ fontSize: 15 }}>
+                          Receipt
+                        </span>
+                        <span className="badge badge-ok">
+                          <Check size={12} />
+                          settled
+                        </span>
                       </div>
+                      <dl className="rows" style={{ margin: 0 }}>
+                        <div className="kv">
+                          <dt>Paid</dt>
+                          <dd>
+                            {opened.units} vouchers · {usdcOfUnits(opened.units ?? 0)} USDC
+                          </dd>
+                        </div>
+                        <div className="kv" style={{ borderTop: "1px solid var(--color-graphite)" }}>
+                          <dt>Burned on HCS</dt>
+                          <dd className="mono">
+                            <a href={txLink(opened.tx)} target="_blank" rel="noreferrer">
+                              {opened.tx}
+                            </a>
+                          </dd>
+                        </div>
+                        <div className="kv" style={{ borderTop: "1px solid var(--color-graphite)" }}>
+                          <dt>{opened.pub.name} saw</dt>
+                          <dd>A valid payment. No account, no deposit, no history.</dd>
+                        </div>
+                      </dl>
                     </div>
                   )}
                 </article>
               ) : (
-                pubs.map((p, i) => (
-                  <section key={p.id} className={`panel ${i % 2 === 0 ? "panel-keylime" : "panel-mint"}`}>
-                    <div className="pub-head">
+                pubs.map((p) => (
+                  <section key={p.id} className="card card-flush">
+                    <div className="card-head">
                       <div>
-                        <p className="eyebrow">Publisher</p>
-                        <h2 className="h">{p.name}</h2>
-                        <p className="muted" style={{ margin: "4px 0 0" }}>
+                        <h2 className="h-card">{p.name}</h2>
+                        <p className="label" style={{ margin: "2px 0 0" }}>
                           {p.tagline}
                         </p>
                       </div>
                       <span className="badge">{p.articles.length} articles</span>
                     </div>
-                    <ul className="article-list">
+                    <ul className="rows">
                       {p.articles.map((a) => (
                         <li key={a.slug}>
                           <button suppressHydrationWarning className="article-row" onClick={() => open(p, a)} disabled={!info}>
                             <span className="article-title">{a.title}</span>
                             <span className="article-teaser">{a.teaser}</span>
                             <span className="article-meta">
-                              <span className="badge badge-sm">
+                              <span className="badge">
                                 {a.price} {a.price === 1 ? "voucher" : "vouchers"}
                               </span>
-                              <span className="mono">{usdcOfUnits(a.price)} USDC</span>
-                              <ArrowRight size={16} strokeWidth={1.5} />
+                              <span className="mono muted">{usdcOfUnits(a.price)} USDC</span>
+                              <ArrowRight size={15} className="arrow" />
                             </span>
                           </button>
                         </li>
@@ -376,21 +395,23 @@ export default function Reader() {
               )}
             </div>
 
-            <aside className="col" id="wallet">
-              <section className="panel panel-sage">
-                <div className="wallet-head">
-                  <div>
-                    <p className="eyebrow">Wallet</p>
-                    <h2 className="h-sm">Vouchers live only in this browser.</h2>
-                  </div>
-                  <Wallet size={22} strokeWidth={1.5} color="#0f3e17" />
+            <aside className="col aside" id="wallet">
+              <section className="card">
+                <div className="pub-meta" style={{ justifyContent: "space-between" }}>
+                  <h2 className="h-card" style={{ fontSize: 15 }}>
+                    Wallet
+                  </h2>
+                  <span className="badge">
+                    <Lock size={11} />
+                    browser only
+                  </span>
                 </div>
-                <div className="balance">
+                <div className="balance" style={{ marginTop: 16 }}>
                   <span className="balance-value">{balance.units.toLocaleString()}</span>
-                  <span className="field-label">vouchers</span>
+                  <span className="label">vouchers</span>
                 </div>
                 <div className="balance-meta">
-                  <span>= {balance.usdc} USDC</span>
+                  <span>{balance.usdc} USDC</span>
                   <span className="mono">{account || "…"}</span>
                 </div>
 
@@ -429,37 +450,33 @@ export default function Reader() {
                       onProof={setProof}
                     />
                   )}
-                  <button suppressHydrationWarning className="btn btn-forest btn-block" onClick={deposit} disabled={!!busy || !info || !account}>
+                  <button suppressHydrationWarning className="btn btn-lime btn-block" onClick={deposit} disabled={!!busy || !info || !account}>
                     {busy ? (
                       <>
-                        <Loader2 size={16} strokeWidth={1.5} className="spin" />
+                        <Loader2 size={14} className="spin" />
                         {busy}
                       </>
                     ) : (
-                      <>
-                        Deposit {amount} USDC
-                        <ArrowRight size={16} strokeWidth={1.5} />
-                      </>
+                      `Deposit ${amount} USDC`
                     )}
                   </button>
                   {depositErr && (
-                    <div className="notice deposit-error" role="alert">
-                      <AlertCircle size={16} />
+                    <div className="notice notice-err deposit-error" role="alert">
+                      <AlertCircle size={15} />
                       <span>
-                        <b>Refused.</b> {depositErr}
+                        Refused <span className="msg">· {depositErr}</span>
                       </span>
                     </div>
                   )}
                 </div>
               </section>
 
-              <section className="panel panel-mint" style={{ padding: 28 }}>
-                <div className="wallet-head">
-                  <div>
-                    <p className="eyebrow">Activity</p>
-                    <h2 className="h-sm">What just happened</h2>
-                  </div>
-                  <span className="badge badge-sm">{log.length}</span>
+              <section className="card card-flush">
+                <div className="card-head">
+                  <span className="h-card" style={{ fontSize: 15 }}>
+                    Activity
+                  </span>
+                  <span className="badge">{log.length}</span>
                 </div>
                 {log.length === 0 ? (
                   <p className="empty">Deposit, then open an article.</p>
@@ -467,12 +484,15 @@ export default function Reader() {
                   <ul className="log">
                     {log.map((l, i) => (
                       <li key={i} className={`line ${l.kind}`}>
-                        {l.kind === "err" ? <AlertCircle size={15} /> : l.kind === "ok" ? <Check size={15} /> : <CircleDot size={15} strokeWidth={1.5} />}
+                        {l.kind === "err" ? (
+                          <span className="badge badge-err">refused</span>
+                        ) : l.kind === "ok" ? (
+                          <span className="badge badge-ok">ok</span>
+                        ) : (
+                          <span className="badge">402</span>
+                        )}
                         <span>
-                          <span className="line-text">
-                            {l.kind === "err" && "Refused: "}
-                            {l.text}
-                          </span>
+                          <span className="line-text">{l.text}</span>
                           <br />
                           <span className="line-at">{l.at}</span>
                         </span>
@@ -485,18 +505,30 @@ export default function Reader() {
           </div>
         </section>
 
-        <div className="strip" aria-label="Built on">
-          <span>Hedera Consensus Service</span>
-          <span>Hedera Token Service</span>
-          <span>Mirror Node</span>
-          <span>RFC 9474</span>
-          <span>x402</span>
-          <span>World ID</span>
-        </div>
+        <section className="section">
+          <div className="strip" aria-label="Built on">
+            <span className="lead">Built on</span>
+            <span>Hedera Consensus Service</span>
+            <span>Hedera Token Service</span>
+            <span>Mirror Node</span>
+            <span>RFC 9474</span>
+            <span>x402</span>
+            <span>World ID</span>
+          </div>
+        </section>
 
         <section className="section" id="how">
-          <p className="eyebrow">How it works</p>
-          <h2 className="h-lg">Card-network privacy, on a public ledger.</h2>
+          <div className="faq-head">
+            <h2 className="h-section">
+              Card-network privacy,
+              <br />
+              on a public ledger.
+            </h2>
+            <a className="link-arrow" href={AUDIT_URL} target="_blank" rel="noreferrer">
+              Check the books yourself
+              <ArrowRight size={15} />
+            </a>
+          </div>
           <ul className="faq">
             {[
               ["What does the chain see?", "Your one deposit to Hexera, anonymous serial hashes burned on the hexera-spent topic for each read, and a batched payout to each publisher. Nothing links your deposit to any article."],

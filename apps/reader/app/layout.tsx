@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-// Self-hosted substitutes for DESIGN.md's Faire Octave (display) and Suisse Intl (body).
-import "@fontsource/cormorant-garamond/300.css";
+// Self-hosted: Inter (DESIGN.md's primary face) and JetBrains Mono (its substitute for Berkeley Mono).
 import "@fontsource-variable/inter";
+import "@fontsource/jetbrains-mono/400.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
