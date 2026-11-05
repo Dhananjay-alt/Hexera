@@ -1,4 +1,5 @@
 import { sha256Hex } from "@hexera/core";
+import { hashSignal } from "@worldcoin/idkit-core/hashing";
 import type { FacilitatorConfig } from "./config";
 
 /**
@@ -18,28 +19,48 @@ export interface WorldIdVerified {
 
 export class WorldIdError extends Error {}
 
-function findNullifier(o: unknown, depth = 0): string | undefined {
-  if (!o || typeof o !== "object" || depth > 6) return;
-  for (const [k, v] of Object.entries(o)) {
-    if (/^nullifier(_hash)?$/i.test(k) && (typeof v === "string" || typeof v === "number" || typeof v === "bigint")) return String(v);
-  }
-  for (const v of Object.values(o)) {
-    const hit = findNullifier(v, depth + 1);
-    if (hit) return hit;
-  }
+interface ResponseItem {
+  identifier?: unknown;
+  nullifier?: unknown;
+  signal_hash?: unknown;
 }
 
+/**
+ * Production path. The proof is checked by the Developer Portal; the per-human
+ * id is read from the one typed field that holds it, IDKit v4's
+ * `ResponseItemV4.nullifier` ("RP-scoped nullifier (decimal)",
+ * @worldcoin/idkit-core 4.6.0), on the `proof_of_human` response item.
+ *
+ * Only World ID 4.0 is accepted: the same human has different v3 and v4
+ * nullifiers, so allowing both would let one person get two caps.
+ */
 export async function verifyWorldId(cfg: FacilitatorConfig, input: WorldIdInput, expectedSignal: string): Promise<WorldIdVerified> {
   if (input.mode === "dev") {
+    // The simulator path exists only when WORLD_ID_MODE=dev; production never falls back to it.
     if (cfg.worldIdMode !== "dev") throw new WorldIdError("dev World ID proofs are disabled (WORLD_ID_MODE=production)");
     if (!input.human || typeof input.human !== "string") throw new WorldIdError("dev proof needs a human id");
     return { human: await sha256Hex(`dev:${input.human}`) };
   }
-
+  if (cfg.worldIdMode !== "production") throw new WorldIdError("IDKit proofs need WORLD_ID_MODE=production");
   if (!cfg.worldRpId) throw new WorldIdError("WORLD_RP_ID is not configured");
-  const result = input.result;
+
+  const result = (input as { result?: Record<string, unknown> }).result;
   if (!result || typeof result !== "object") throw new WorldIdError("missing IDKit result");
-  if (result.action !== undefined && result.action !== cfg.worldAction) throw new WorldIdError("wrong World ID action");
+  if (result.protocol_version !== "4.0") throw new WorldIdError("only World ID 4.0 proofs are accepted");
+  if (result.action !== cfg.worldAction) throw new WorldIdError("wrong World ID action");
+  // Simulator / staging proofs carry environment "staging"; never accept them here.
+  if (result.environment !== "production") throw new WorldIdError(`World ID proof is from the "${String(result.environment)}" environment, not production`);
+
+  const responses = Array.isArray(result.responses) ? (result.responses as ResponseItem[]) : [];
+  const idx = responses.findIndex((r) => r && r.identifier === "proof_of_human");
+  if (idx < 0) throw new WorldIdError("no proof_of_human credential in the World ID result");
+  const item = responses[idx];
+  if (typeof item.nullifier !== "string" || !/^\d{1,80}$/.test(item.nullifier)) throw new WorldIdError("proof_of_human nullifier missing or not a decimal string");
+
+  // Signal binding, checked against the proof itself (not a value the client reports).
+  if (typeof item.signal_hash !== "string" || item.signal_hash.toLowerCase() !== hashSignal(expectedSignal).toLowerCase()) {
+    throw new WorldIdError("proof signal does not match the depositing account");
+  }
 
   const res = await fetch(`https://developer.worldcoin.org/api/v4/verify/${cfg.worldRpId}`, {
     method: "POST",
@@ -47,15 +68,14 @@ export async function verifyWorldId(cfg: FacilitatorConfig, input: WorldIdInput,
     body: JSON.stringify(result),
   });
   const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-  if (!res.ok || body.success === false) {
+  if (!res.ok || body.success !== true) {
     throw new WorldIdError(`World ID verification failed: ${String(body.detail ?? body.code ?? res.status)}`);
   }
-  // Signal binding: the client must request the proof with signal = account id.
-  if (input.signal !== undefined && input.signal !== expectedSignal) throw new WorldIdError("proof signal does not match deposit account");
 
-  const nullifier = findNullifier(body) ?? findNullifier(result);
-  if (!nullifier) throw new WorldIdError("no nullifier in World ID response");
-  return { human: await sha256Hex(`world:${cfg.worldAction}:${nullifier}`) };
+  const human = await sha256Hex(`world:v4:${cfg.worldAction}:${BigInt(item.nullifier).toString()}`);
+  // Printed so the field can be confirmed with a real World App proof; the nullifier itself is never logged.
+  console.log(`[facilitator] world id: verified proof_of_human (v4); human id read from result.responses[${idx}].nullifier; human=${human.slice(0, 12)}…`);
+  return { human };
 }
 
 /** RP signature so the IDKit widget can open a request (v4 flow). */

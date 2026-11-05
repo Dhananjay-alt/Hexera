@@ -42,6 +42,13 @@ export interface FacilitatorConfig {
 
 const num = (v: string | undefined, d: number) => (v ? Number(v) : d);
 
+/** Unset: dev in local mode, production on testnet. Anything else but dev|production is an error, never a silent fallback. */
+function parseWorldIdMode(v: string | undefined, mode: string): "dev" | "production" {
+  if (v === undefined || v === "") return mode === "local" ? "dev" : "production";
+  if (v === "dev" || v === "production") return v;
+  throw new Error(`WORLD_ID_MODE must be "dev" or "production", got "${v}"`);
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): FacilitatorConfig {
   const mode = (env.HEXERA_MODE ?? "local") as "local" | "testnet";
   const port = num(env.FACILITATOR_PORT ?? env.PORT, 4020);
@@ -70,7 +77,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): FacilitatorCon
     freeDailyLimitBase: BigInt(env.FREE_DAILY_LIMIT_BASE ?? "1000000"), // $1/account/day without World ID
     humanDailyCapBase: BigInt(env.HUMAN_DAILY_CAP_BASE ?? "20000000"), // $20/human/day
 
-    worldIdMode: (env.WORLD_ID_MODE ?? (mode === "local" ? "dev" : "production")) as "dev" | "production",
+    worldIdMode: parseWorldIdMode(env.WORLD_ID_MODE, mode),
     worldAppId: env.WORLD_APP_ID,
     worldRpId: env.WORLD_RP_ID,
     worldRpSigningKey: env.WORLD_RP_SIGNING_KEY,

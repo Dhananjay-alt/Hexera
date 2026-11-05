@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { IDKitRequestWidget, orbLegacy } from "@worldcoin/idkit";
+import { IDKitRequestWidget, proofOfHuman } from "@worldcoin/idkit";
 import type { WorldIdProof } from "@hexera/client";
 import { FACILITATOR_URL } from "@/lib/wallet";
 
@@ -59,8 +59,9 @@ export function WorldIdButton({ mode, appId, action, signal, devHuman, proof, on
           app_id={appId as `app_${string}`}
           action={action}
           rp_context={rpContext as never}
-          allow_legacy_proofs={true}
-          preset={orbLegacy({ signal })}
+          // v4 only: the same human has different v3 and v4 nullifiers, which would double the cap.
+          allow_legacy_proofs={false}
+          preset={proofOfHuman({ signal })}
           onSuccess={(result) => onProof({ mode: "idkit", result: result as unknown as Record<string, unknown>, signal })}
           onError={(code) => setErr(`World ID error: ${code}`)}
         />
