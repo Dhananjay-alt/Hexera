@@ -2,11 +2,17 @@ import { constants, createPrivateKey, createPublicKey, privateDecrypt, publicEnc
 import { fromBase64, toBase64 } from "@hexera/core";
 
 /**
- * RFC 9474 BlindSign using OpenSSL's raw RSA (CRT), ~100x faster than the
- * pure-JS bignum path in blindrsa-ts:
- *   s  = RSASP1(sk, m)   -> privateDecrypt, no padding
- *   m' = RSAVP1(pk, s)   -> publicEncrypt, no padding
- *   require m == m'      (fault check from the RFC)
+ * RFC 9474 BlindSign using OpenSSL's raw RSA, ~100x faster than blindrsa-ts:
+ *   s  = RSASP1(sk, m)   -> privateDecrypt, RSA_NO_PADDING
+ *   m' = RSAVP1(pk, s)   -> publicEncrypt, RSA_NO_PADDING
+ *   require m == m'      (RFC 9474 step 4; every signature is checked before it is returned)
+ *
+ * Inside privateDecrypt, OpenSSL (3.5.x, crypto/rsa/rsa_ossl.c) applies base
+ * blinding, uses CRT (the JWK carries p, q, dp, dq, qi) with
+ * BN_mod_exp_mont_consttime, and checks the CRT result itself: if r^e != m it
+ * discards the CRT output and recomputes with a constant-time m^d mod n.
+ * blindrsa-ts's own BlindSign does a variable-time sjcl exponentiation with d,
+ * without blinding, so this path is also the safer one.
  */
 export class NativeBlindSigner {
   private readonly sk: KeyObject;
