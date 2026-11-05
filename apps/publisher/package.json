@@ -1,0 +1,12 @@
+{
+  "name": "@hexera/publisher",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": { "start": "tsx src/main.ts" },
+  "dependencies": {
+    "@hexera/server": "*",
+    "express": "^5.1.0"
+  }
+}
