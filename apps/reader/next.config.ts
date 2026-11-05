@@ -16,5 +16,7 @@ const config: NextConfig = {
   },
   turbopack: { root: resolve(__dirname, "../..") },
   agentRules: false,
+  // Keep the dev overlay badge out of demo recordings.
+  devIndicators: false,
 };
 export default config;

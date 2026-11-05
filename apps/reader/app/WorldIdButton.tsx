@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { AlertCircle, Fingerprint, ShieldCheck, X } from "lucide-react";
 import { IDKitRequestWidget, proofOfHuman } from "@worldcoin/idkit";
 import type { WorldIdProof } from "@hexera/client";
 import { FACILITATOR_URL } from "@/lib/wallet";
@@ -23,18 +24,26 @@ export function WorldIdButton({ mode, appId, action, signal, devHuman, proof, on
 
   if (proof) {
     return (
-      <div className="worldid ok">
-        <span>● Proof of Human verified{proof.mode === "dev" ? ` (simulator: ${proof.human})` : ""}</span>
-        <button className="link" onClick={() => onProof(null)}>clear</button>
+      <div className="worldid-ok">
+        <span>
+          <ShieldCheck size={14} />
+          Proof of Human verified{proof.mode === "dev" ? " · simulator" : ""}
+        </span>
+        <button className="btn btn-secondary" style={{ height: 26, padding: "0 8px" }} onClick={() => onProof(null)} aria-label="Clear World ID proof">
+          <X size={12} />
+        </button>
       </div>
     );
   }
 
   if (mode === "dev") {
     return (
-      <div className="worldid">
-        <button onClick={() => onProof({ mode: "dev", human: devHuman, signal })}>Verify with World ID (dev simulator)</button>
-        <small>Set WORLD_ID_MODE=production + WORLD_APP_ID / WORLD_RP_ID to use World App.</small>
+      <div className="field">
+        <button className="btn btn-outline btn-block" onClick={() => onProof({ mode: "dev", human: devHuman, signal })}>
+          <Fingerprint size={14} />
+          Verify with World ID (dev simulator)
+        </button>
+        <p className="hint">Set WORLD_ID_MODE=production with WORLD_APP_ID and WORLD_RP_ID to use World App.</p>
       </div>
     );
   }
@@ -49,9 +58,17 @@ export function WorldIdButton({ mode, appId, action, signal, devHuman, proof, on
   };
 
   return (
-    <div className="worldid">
-      <button onClick={start}>Verify with World ID</button>
-      {err && <small className="err">{err}</small>}
+    <div className="field">
+      <button className="btn btn-outline btn-block" onClick={start}>
+        <Fingerprint size={14} />
+        Verify with World ID
+      </button>
+      {err && (
+        <p className="hint error-text" role="alert">
+          <AlertCircle size={14} />
+          {err}
+        </p>
+      )}
       {rpContext && appId && (
         <IDKitRequestWidget
           open={open}
