@@ -1,235 +1,230 @@
-# Ui — Style Reference
-> clinical blueprint on frosted paper
+# Ease Health — Style Reference
+> Botanical greenhouse on cream paper
 
 **Theme:** light
 
 Source measurements are normalized; roles and recommendations are interpreted. Font summary lists are independent, not paired by position. HTML examples are reconstructions, not source components.
 
-shadcn/ui is a monochromatic design-system workshop: pure white canvas, soft warm-gray surfaces, and large-radius cards floating on hairline borders. The interface is almost entirely achromatic — black text, white surfaces, gray secondary tones — with a single destructive red reserved for error states and nothing else. Typography leans on Geist's geometric neutrality with tight letter-spacing on display sizes, creating a quiet, code-adjacent feel that reads as developer infrastructure rather than consumer product.
+Ease Health uses a clinical-botanical language: a warm cream canvas layered with soft sage, keylime, and slate-blue panels that feel like a greenhouse rendered on paper. Typography carries the entire personality — weight 300 serif headlines (Faire Octave) paired against a humanist sans (Suisse Intl) create a hushed, editorial authority unusual for healthtech. A single deep forest green (#0f3e17) anchors every action and heading, reading like ink on watercolor. Surfaces are flat and shadowless; depth comes from layered tinted panels and generous padding, not elevation. Components are rounded (~14px) and pill-shaped for tags, keeping the whole system soft and approachable without losing clinical seriousness.
 
 ## Tokens — Colors
 
 | Name | Value | Token | Role |
 |------|-------|-------|------|
-| Canvas | `#f5f5f5` | `--color-canvas` | Page background, muted surface fills, secondary buttons |
-| Paper | `#ffffff` | `--color-paper` | Card surfaces, popover backgrounds, primary button fills |
-| Surface Alt | `#fafafa` | `--color-surface-alt` | Sidebar background, subtle card variant, input resting state |
-| Ink | `#0a0a0a` | `--color-ink` | Primary text, headings, button labels, icon strokes |
-| Ink Soft | `#171717` | `--color-ink-soft` | Filled button backgrounds, secondary text on light surfaces |
-| Mid Gray | `#737373` | `--color-mid-gray` | Muted body text, placeholder text, helper labels, icon fills at rest |
-| Hairline | `#e5e5e5` | `--color-hairline` | Borders, input outlines, card edges, badge outlines |
-| Ember | `#e7000b` | `--color-ember` | Red decorative accent for icons, marks, and small graphic details. Use as a supporting accent, not as a status color |
+| Forest Ink | `#0f3e17` | `--color-forest-ink` | Primary action buttons, headings, links, icon strokes — deep botanical green reads as ink, the only saturated dark in the system |
+| Sage Mist | `#b1dbb8` | `--color-sage-mist` | Mid-tone card backgrounds and decorative washes, panel-level surfaces |
+| Keylime Wash | `#e1f4df` | `--color-keylime-wash` | Hero panel background, light card surfaces — the dominant tinted canvas tone |
+| Mint Veil | `#cfe7d3` | `--color-mint-veil` | Accent card surfaces, soft section dividers between sage and keylime layers |
+| Slate Hush | `#b6ced5` | `--color-slate-hush` | Cool counter-balance panel for product preview and feature blocks — breaks the green monotony with desaturated blue-gray |
+| Cream Paper | `#fffefc` | `--color-cream-paper` | Page background, badge backgrounds, button text — warm off-white that softens every green |
+| Charcoal | `#222222` | `--color-charcoal` | Navigation text and minor UI strokes — restrained secondary ink |
+| Border Mist | `#efeeeb` | `--color-border-mist` | Hairline dividers and subtle borders throughout the layout |
+| Forest Shadow | `#0c2f10` | `--color-forest-shadow` | Supporting palette color for small decorative accents when the core palette needs contrast. Do not promote it to the primary CTA color |
 
 ## Tokens — Typography
 
-### Geist — All interface text — body at 14px/400, headings ranging 24–48px/600, buttons at 13–14px/500. Geist's geometric letterforms and uniform stroke width create a developer-tool neutrality; weight 600 at 48px with -0.05em tracking produces tight, confident display headlines that feel engineered rather than editorial. · `--font-geist`
-- **Substitute:** Inter
-- **Weights:** 400, 500, 600
-- **Sizes:** 12, 13, 14, 16, 18, 24, 30, 36, 48
-- **Line height:** 1.10, 1.11, 1.20, 1.33, 1.43, 1.50, 1.56, 1.63, 2.00
-- **Letter spacing:** -0.0500em at display (48px), -0.0250em at subheading (24–30px), 0.0500em at caption (12px uppercase). Tracking tightens aggressively at large sizes and loosens slightly at small uppercase labels.
-- **OpenType features:** `"ss01" on, "cv11" on`
-- **Role:** All interface text — body at 14px/400, headings ranging 24–48px/600, buttons at 13–14px/500. Geist's geometric letterforms and uniform stroke width create a developer-tool neutrality; weight 600 at 48px with -0.05em tracking produces tight, confident display headlines that feel engineered rather than editorial.
+### Faire Octave — Display serif for all section headings and hero copy · `--font-faire-octave`
+- **Substitute:** Cormorant Garamond, Playfair Display
+- **Weights:** 300
+- **Sizes:** 40px, 56px, 74px
+- **Line height:** 1.05–1.35
+- **Letter spacing:** -0.01em at 40px, -0.03em at 56–74px
+- **Role:** Display serif for all section headings and hero copy
+
+### Suisse Intl — Body, navigation, UI labels, buttons, captions — humanist sans at whisper weight for feature lists and normal weight for copy · `--font-suisse-intl`
+- **Substitute:** Inter, Söhne, Helvetica Neue
+- **Weights:** 300, 400, 600
+- **Sizes:** 10px, 11px, 12px, 14px, 18px, 23px, 28px, 56px
+- **Line height:** 1.00–1.61
+- **Letter spacing:** 0.08em uppercase at 11px/600 (eyebrow labels); natural tracking otherwise
+- **Role:** Body, navigation, UI labels, buttons, captions — humanist sans at whisper weight for feature lists and normal weight for copy
 
 ### Type Scale
 
 | Role | Family | Weight | Size | Line Height | Letter Spacing | Token |
 |------|--------|--------|------|-------------|----------------|-------|
-| caption | — | — | 12px | 1.33 | 0.6px | `--text-caption` |
-| body | — | — | 14px | 1.43 | — | `--text-body` |
-| body-lg | — | — | 16px | 1.5 | — | `--text-body-lg` |
-| subheading | — | — | 18px | 1.56 | — | `--text-subheading` |
-| heading-sm | — | — | 24px | 1.33 | -0.6px | `--text-heading-sm` |
-| heading | — | — | 30px | 1.2 | -0.75px | `--text-heading` |
-| heading-lg | — | — | 36px | 1.11 | -0.9px | `--text-heading-lg` |
-| display | — | — | 48px | 1.1 | -2.4px | `--text-display` |
+| caption | — | — | 10px | 1.61 | 0px | `--text-caption` |
+| body | — | — | 14px | 1.5 | 0px | `--text-body` |
+| subheading | — | — | 18px | 1.3 | 0px | `--text-subheading` |
+| heading-sm | — | — | 23px | 1.5 | 0px | `--text-heading-sm` |
+| heading | — | — | 40px | 1.35 | -0.4px | `--text-heading` |
+| heading-lg | — | — | 56px | 1.2 | -1.68px | `--text-heading-lg` |
+| display | — | — | 74px | 1.05 | -2.22px | `--text-display` |
 
 ## Tokens — Spacing & Shapes
 
-**Base unit:** 4px
-
-**Density:** compact
+**Density:** comfortable
 
 ### Spacing Scale
 
 | Name | Value | Token |
 |------|-------|-------|
 | 4 | 4px | `--spacing-4` |
-| 8 | 8px | `--spacing-8` |
-| 12 | 12px | `--spacing-12` |
-| 16 | 16px | `--spacing-16` |
-| 20 | 20px | `--spacing-20` |
-| 24 | 24px | `--spacing-24` |
-| 48 | 48px | `--spacing-48` |
+| 7 | 7px | `--spacing-7` |
+| 9 | 9px | `--spacing-9` |
+| 11 | 11px | `--spacing-11` |
+| 14 | 14px | `--spacing-14` |
+| 18 | 18px | `--spacing-18` |
+| 21 | 21px | `--spacing-21` |
+| 28 | 28px | `--spacing-28` |
+| 35 | 35px | `--spacing-35` |
+| 42 | 42px | `--spacing-42` |
+| 49 | 49px | `--spacing-49` |
+| 56 | 56px | `--spacing-56` |
+| 70 | 70px | `--spacing-70` |
+| 76 | 76px | `--spacing-76` |
+| 99 | 99px | `--spacing-99` |
+| 156 | 156px | `--spacing-156` |
 
 ### Border Radius
 
 | Element | Value |
 |---------|-------|
-| cards | 24px |
-| small | 6px |
-| badges | 18px |
-| inputs | 18px |
-| nested | 10px |
-| buttons | 18px |
-
-### Shadows
-
-| Name | Value | Token |
-|------|-------|-------|
-| subtle | `oklab(0.145 -0.00000143796 0.00000340492 / 0.05) 0px 0px ...` | `--shadow-subtle` |
-| subtle-2 | `lab(2.75381 0 0) 0px 0px 0px 0px` | `--shadow-subtle-2` |
+| nav | 7px |
+| cards | 14px |
+| badges | 999px |
+| buttons | 14px |
+| sections | 9999px |
 
 ### Layout
 
-- **Page max-width:** 1280px
-- **Section gap:** 48-80px
-- **Card padding:** 20px
-- **Element gap:** 8px
+- **Page max-width:** 1200px
+- **Section gap:** 64-96px
+- **Card padding:** 28-42px
+- **Element gap:** 14-21px
 
 ## Components
 
-### Primary Filled Button
-**Role:** High-emphasis action (Submit, Save, Create)
+### Primary Forest Button
+**Role:** Filled CTA for demos, explores, and form submits
 
-Background #0a0a0a, text #fafafa, border none, radius 18px, padding 0px 12px (compact) or 8px 16px (comfortable), font 14px Geist weight 500. Height ≈ 36–40px. The dark-on-light inversion is the only chromatic interaction in the system; the fully rounded radius (18px on a ~36px height) produces perfect pill geometry.
+Background #0f3e17, text #fffefc, 14px border-radius, padding 14px 21px, Suisse Intl 14px/400. Arrow icon in white at trailing edge. Hover transitions to #0c2f10.
 
-### Secondary Ghost Button
-**Role:** Low-emphasis action (Cancel, Back)
+### Large Forest Button
+**Role:** Hero-scale CTA with generous breathing room
 
-Background #f5f5f5, text #0a0a0a, no border, radius 18px, padding 0px 12px or 8px 16px, font 14px weight 500. Soft gray fill reads as a tonal sibling to the primary rather than a muted alternative — both buttons share shape and type, differing only in lightness.
+Same Forest Ink fill and white text, but padding scales to 42px all sides for hero placement. Rounded 14px corners. Used sparingly for maximum-weight calls to action.
 
-### Outline Button
-**Role:** Tertiary action with visible boundary
+### Pill Badge / Tag
+**Role:** Category labels, CRM/EHR/RCM module tags, status indicators
 
-Background transparent, text #0a0a0a, border 1px solid #e5e5e5, radius 18px, padding 0px 12px or 8px 10px. The hairline border defines the shape without weight — preferred when the button sits inside a card or alongside filled controls.
+Background #fffefc, text Forest Ink #0f3e17, 999px border-radius (full pill), padding 9px 14px, Suisse Intl 14px/400. Inverted cream-on-green relationship makes tags feel like paper labels.
 
-### Card
-**Role:** Content container for blocks, previews, dashboard panels
+### Sage Feature Card
+**Role:** Heavier-tinted content panel for feature highlights
 
-Background #ffffff, radius 24px, border 1px solid #e5e5e5, shadow oklab(0.145/.05) 0 0 0 1px + rgba(0,0,0,0.1) 0 1px 3px + rgba(0,0,0,0.1) 0 1px 2px -1px, padding 20px. The 1px hairline shadow stacks with a faint elevation layer — cards sit visually raised but remain flat and understated.
+Background Sage Mist #b1dbb8, 14px border-radius, 42px padding all sides, no shadow. Hosts illustration or product preview content. Flat surface — depth comes from color not elevation.
 
-### Nested Card Header/Footer
-**Role:** Header or footer strip inside a card
+### Keylime Soft Card
+**Role:** Light-tinted content panel for secondary features
 
-Asymmetric radius — top corners 24px on header, bottom corners 24px on footer. Padding 20px horizontal, transparent fill. Provides a subtle tonal band within card boundaries without introducing a new color.
+Background Keylime Wash #e1f4df, 14px border-radius, 28px padding, no shadow. Tighter padding than sage variant for compact content blocks.
 
-### Input Field
-**Role:** Text entry, search, form controls
+### Slate Product Panel
+**Role:** Cool-toned container for product UI screenshots and demos
 
-Background #f5f5f5 (resting) or transparent (inline), text #0a0a0a, border none at rest with 1px #e5e5e5 on focus, radius 18px, padding 8px 10px, font 14px weight 400. The soft gray fill differentiates the input from the card surface beneath it; focus replaces the fill with a 1px ring.
+Background Slate Hush #b6ced5, 14px border-radius, 42px padding, no shadow. Provides cool visual counterpoint to warm green panels — the only non-green tinted surface.
 
-### Badge — Solid
-**Role:** Tag, status pill, counter
+### Product Preview Card (Inner)
+**Role:** White floating card within Slate Product Panel
 
-Background #171717, text #fafafa, radius 18px, padding 2px 8px, font 12px weight 500. Pill-shaped at 18px radius — the minimum height creates a capsule tag.
+Background Cream Paper #fffefc, 14px border-radius, 28px padding, no border or shadow. Represents a product screen mockup (CRM, EHR, RCM). Sits on the Slate panel like a printed screenshot.
 
-### Badge — Soft
-**Role:** Neutral label, category tag
+### Navigation Bar
+**Role:** Top-level site navigation
 
-Background #f5f5f5, text #171717, radius 18px, padding 2px 8px, font 12px weight 500. Same capsule geometry as solid badge, tonal variant.
+Transparent over cream canvas, text Charcoal #222222, Suisse Intl 14px/400, 7px radius on interactive items. 'Book a Demo' CTA pill on the right uses Forest Ink fill.
 
-### Badge — Outline
-**Role:** Subtle tag with no fill
+### Eyebrow Label
+**Role:** Section category tag above headings
 
-Transparent background, text #0a0a0a, radius 18px, padding 2px 8px. The lightest-weight tag — used when the label is informational rather than categorical.
+Suisse Intl 11px/600, letter-spacing 0.08em, uppercase, Forest Ink color. Tiny typographic marker that labels each section's theme (e.g. 'QUICK ANSWER').
 
-### Sidebar Surface
-**Role:** Left navigation panel
+### FAQ Row
+**Role:** Two-column question/answer layout
 
-Background #fafafa, full-height, contained width. Sits one tonal step off the canvas (#f5f5f5) so the navigation reads as a distinct layer without introducing a divider line.
+Left column: Faire Octave 40px/300 in Forest Ink for question. Right column: Suisse Intl 14px/400 in Charcoal for answer. 1px Border Mist divider between rows.
 
-### Breadcrumb Trail
-**Role:** Hierarchical path indicator
+### Investor Logo Strip
+**Role:** Social proof row of VC logos
 
-Inline text with chevron separators, font 14px weight 400, color #737373 for separators and #0a0a0a for the current segment. No background, no borders — purely typographic hierarchy.
-
-### Stat Block
-**Role:** Large numeric metric display
-
-Label in 12–14px uppercase #737373, value in 30–48px weight 600 #0a0a0a with tight tracking. Progress bar or comparison text in 14px #737373. The block relies on typographic scale alone — no card chrome — to establish the metric.
-
-### Search Trigger
-**Role:** Command palette / search input
-
-Background #f5f5f5, text #737373, radius 18px, padding 8px 10px, with a keyboard shortcut indicator (e.g., ⌘K) right-aligned. Functions as both a button and an input affordance.
-
-### Destructive Action
-**Role:** Delete, remove, revoke — error-adjacent interactions
-
-Text or icon in #e7000b against the monochromatic palette. The red is the only chromatic hue in the system and appears exclusively in destructive or error contexts — it never decorates.
+Single horizontal row, monochrome treatment in Charcoal #222222 on cream canvas, generous vertical padding (42px+). No decorative borders — relies on whitespace for rhythm.
 
 ## Do's and Don'ts
 
 ### Do
-- Use #0a0a0a on #ffffff for filled buttons — the dark inversion is the only primary action treatment.
-- Maintain 18px radius on all buttons, inputs, and badges for perfect pill geometry; use 24px radius only on cards.
-- Set display headlines at 48px/600 with -0.0500em tracking — Geist's geometric weight at this size with aggressive tightening produces the engineered headline voice.
-- Reserve #e7000b exclusively for destructive states; never use it for decoration, branding, or non-error emphasis.
-- Stack card shadows as 1px hairline + 1px + 2px offset — the combined effect is a barely-perceptible elevation that reads as 'card' without drama.
-- Use #f5f5f5 for secondary surfaces and inputs; use #fafafa for sidebar and subtle card variants — the three-tone surface stack (canvas → soft → paper) creates layering without borders.
+- Use Forest Ink (#0f3e17) for every CTA, heading, and primary link — it is the only saturated dark and must remain singular
+- Set all display headings in Faire Octave weight 300 with tight tracking (-0.03em at 56–74px) — never bold the serif
+- Pair serif questions with sans-serif answers in FAQ and feature blocks to create typographic contrast
+- Layer surfaces using cream → keylime → mint → sage → slate in order to create depth without shadows
+- Use 14px border-radius on all cards and buttons, 999px on all badges and tags — consistency is non-negotiable
+- Apply 0.08em letter-spacing with uppercase and 600 weight for eyebrow labels only — nowhere else
+- Keep the Slate Hush panel as the exclusive home for product screenshots — it provides the cool counterbalance to warm green panels
 
 ### Don't
-- Do not introduce chromatic brand colors beyond #e7000b — the monochromatic palette is the system.
-- Do not use border-radius values other than 18px (interactive) or 24px (containers); avoid square corners on any element.
-- Do not skip the 1px hairline border on cards — the shadow alone does not define the card edge in this system.
-- Do not set body text below 14px or above #737373 lightness — the type scale is deliberately compact.
-- Do not apply gradients, colored shadows, or accent fills — every surface is a solid tone.
-- Do not use letter-spacing wider than 0.05em or tighter than -0.05em; tracking outside this range breaks the typographic system.
-- Do not mix filled and outline buttons of the same size in a single row without visual rhythm — alternate ghost or secondary variants.
+- Never add box-shadow to cards — the system communicates elevation through tinted layers only
+- Don't use Forest Ink as a background tint — it is too dark for surface washes; reserve for text and action fills only
+- Avoid mixing multiple heading weights — everything is weight 300 in Faire Octave; bold would break the hushed editorial tone
+- Don't place colored borders on cards — depth comes from fill contrast, not strokes
+- Never use more than one serif at a time — Faire Octave owns display, Suisse Intl owns everything else
+- Don't introduce new accent hues — the palette is strictly botanical greens + slate; any other color breaks the greenhouse metaphor
+- Avoid tight padding under 21px on cards — generous 28–42px padding is essential to the soft, breathing-room aesthetic
+- Don't use the sage or keylime tones for text — they are surface colors only and fail contrast for copy
 
 ## Surfaces
 
 | Level | Name | Value | Purpose |
 |-------|------|-------|---------|
-| 0 | Canvas | `#f5f5f5` | Page background, broadest layer |
-| 1 | Sidebar | `#fafafa` | Navigation surface, one step lighter than canvas |
-| 2 | Card | `#ffffff` | Primary content container, brightest surface |
-| 3 | Input Fill | `#f5f5f5` | Resting input field, matches canvas tone for subtle differentiation |
+| 0 | Cream Paper | `#fffefc` | Base page background — warm off-white dominates the canvas |
+| 1 | Keylime Wash | `#e1f4df` | Primary tinted panel — hero left column, light feature blocks |
+| 2 | Mint Veil | `#cfe7d3` | Mid-tone section surface between keylime and sage |
+| 3 | Sage Mist | `#b1dbb8` | Heavier tinted panels — hero accents, feature highlights |
+| 4 | Slate Hush | `#b6ced5` | Cool counter-panel for product showcases and visual contrast |
 
 ## Elevation
 
-- **Card:** `0 0 0 1px rgba(23,23,23,0.05), 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)`
-- **Button (filled):** `none — relies on tonal contrast, not shadow`
-- **Input (focus):** `1px solid #e5e5e5 ring, no offset shadow`
+The system deliberately avoids shadows entirely — boxShadow=none on all card variants. Depth and hierarchy are communicated through layered tinted surfaces (cream → keylime → sage → slate) rather than elevation. This keeps the interface feeling like watercolor paper rather than glassmorphic UI, matching the botanical-greenhouse metaphor.
 
 ## Imagery
 
-Minimal imagery — the system is almost entirely UI. No hero photography, no illustrations, no decorative graphics. Product showcases are rendered as component mockups (cards, inputs, buttons) in a grid, serving as both documentation and visual content. Icons are thin-stroke geometric marks (likely Lucide-derived) at 1.5–2px stroke weight in #0a0a0a or #737373, used sparingly as functional cues. The visual language IS the UI components themselves — the page functions as a living style guide where every visible element is a design token made visible.
+Imagery is product-first and UI-native: floating product screenshots (CRM cards, EHR patient views, RCM revenue graphs) rendered as crisp white cards on Slate Hush panels. No lifestyle photography, no stock imagery. Iconography is minimal stroke-based, rendered in Forest Ink. Illustrations, where present, use the same sage/keylime palette to stay on-system. The visual density is text-dominant with product mockups serving as proof, not decoration.
+
+## Layout
+
+Max-width 1200px centered container with 64–96px vertical section gaps. Hero is a two-column split: left panel tinted Keylime Wash with serif headline + body + CTA; right panel tinted Slate Hush housing three product preview cards (CRM, EHR, RCM) in a row. Below the hero, sections alternate between cream canvas and tinted panels in a botanical rhythm. FAQ uses a two-column text grid (serif question left, sans answer right). The investor logo strip is a single full-width row on cream. Navigation is minimal — left-aligned logo, centered text links, right-aligned CTA pill — no sticky behavior or mega-menu. The overall page rhythm is generous and editorial rather than dense.
 
 ## Agent Prompt Guide
 
 **Quick Color Reference**
-- Canvas/background: #f5f5f5
-- Card/surface: #ffffff
-- Primary text: #0a0a0a
-- Muted text: #737373
-- Border: #e5e5e5
-- primary action: #171717 (filled action)
-- Destructive: #e7000b
+- Text/Heading: #0f3e17 (Forest Ink)
+- Page background: #fffefc (Cream Paper)
+- Hero/light panel: #e1f4df (Keylime Wash)
+- Feature panel: #b1dbb8 (Sage Mist)
+- Product showcase panel: #b6ced5 (Slate Hush)
+- Border: #efeeeb
+- primary action: #0f3e17 (filled action)
 
 **Example Component Prompts**
-1. Create a dashboard stat card: white (#ffffff) background, 24px radius, 1px solid #e5e5e5 border, shadow 0 0 0 1px rgba(23,23,23,0.05) + 0 1px 3px rgba(0,0,0,0.1) + 0 1px 2px -1px rgba(0,0,0,0.1), 20px padding. Label in 12px uppercase #737373, value in 36px Geist weight 600 #0a0a0a with -0.025em tracking.
+1. Create a Primary Action Button: #0f3e17 background, #fffefc text, 9999px radius, compact pill padding. Use this filled treatment for the main CTA.
 
-2. Create a filled dark button: background #0a0a0a, text #fafafa, no border, 18px radius, padding 0px 12px, font 14px Geist weight 500. Height 36px. No shadow — tonal contrast only.
+2. **Feature card**: Sage Mist #b1dbb8 background, 14px border-radius, 42px padding all sides, no shadow. Eyebrow label in Suisse Intl 11px/600 uppercase with 0.08em tracking, Forest Ink color. Heading in Faire Octave 40px/300, Forest Ink. Body in Suisse Intl 14px/400, Charcoal #222222.
 
-3. Create a ghost secondary button: background #f5f5f5, text #0a0a0a, no border, 18px radius, padding 0px 12px, font 14px weight 500. Same dimensions as the filled button for visual parity.
+3. **Pill badge**: Background Cream Paper #fffefc, text Forest Ink #0f3e17, 999px border-radius, padding 9px 14px, Suisse Intl 14px/400. Place above section headings as a category tag.
 
-4. Create an input field: background #f5f5f5, text #0a0a0a, placeholder #737373, no border at rest, 18px radius, padding 8px 10px, font 14px weight 400. On focus: 1px solid #e5e5e5 ring with no offset.
+4. **FAQ row**: Two-column grid. Left: Faire Octave 40px/300 question in Forest Ink. Right: Suisse Intl 14px/400 answer in Charcoal #222222. Separator: 1px solid Border Mist #efeeeb below each row.
 
-5. Create a badge tag: background #171717, text #fafafa, 18px radius (full pill), padding 2px 8px, font 12px Geist weight 500.
 
-## Design Philosophy
+## Type Pairing Philosophy
 
-shadcn/ui is built on three principles visible in every token: (1) achromatic by default — color is absence, not expression; (2) radius defines hierarchy — 18px for interactive elements, 24px for containers, never anything in between; (3) elevation is whisper-quiet — the card shadow is barely perceptible, relying on 1px hairlines and tonal contrast rather than dramatic drop shadows. The system is designed to be copied, modified, and owned — every value is explicit, every token is simple, and nothing is locked behind abstraction.
+The serif/sans split is the system's defining typographic move. Faire Octave (or Cormorant Garamond as substitute) handles ALL headings at weight 300 — never bold. Suisse Intl (or Inter) handles ALL UI and body text. The whisper-weight serif creates editorial calm unusual in healthtech, where most competitors use bold geometric sans headlines. Tracking tightens as size grows: -0.01em at 40px, -0.03em at 56–74px. Body text uses natural tracking. The only uppercase treatment is 11px/600 eyebrows at 0.08em — these are navigational markers, not decorative caps.
 
 ## Similar Brands
 
-- **Vercel** — Same monochromatic palette, same Geist/geometric sans pairing, same pill-shaped buttons with tight letter-spacing on display text
-- **Linear** — Identical approach to monochromatic UI with single accent for destructive states, tight typographic tracking, and hairline-bordered cards
-- **Radix UI** — Same developer-tool visual language — neutral surfaces, geometric type, and component-first documentation layout
-- **Tailwind UI** — Matching restrained palette, identical border-radius scale (large radii on containers), and code-adjacent minimal chrome
-- **Cal.com** — Same compact density, same pill-badge system, and the same achromatic-first approach with red reserved for errors
+- **Headspace** — Same botanical palette approach with sage greens and soft tinted panels, plus serif-leaning editorial calm and generous breathing room
+- **Calm** — Nature-inspired muted greens against cream, generous whitespace, flat surfaces without shadows, and a serene clinical-adjacent tone
+- **Mercury** — Deep single-color ink (#0f3e17 forest vs Mercury's near-black) against a warm off-white canvas with editorial serif display type at weight 300
+- **Spring Health** — Behavioral health branding with green-dominant palette, soft panel layering, and humanist sans body type paired with serif accents
+- **Grow Therapy** — Healthcare SaaS using sage and mint greens against cream, with rounded components and a botanical rather than clinical visual mood
 
 ## Quick Start
 
@@ -238,86 +233,91 @@ shadcn/ui is built on three principles visible in every token: (1) achromatic by
 ```css
 :root {
   /* Colors */
-  --color-canvas: #f5f5f5;
-  --color-paper: #ffffff;
-  --color-surface-alt: #fafafa;
-  --color-ink: #0a0a0a;
-  --color-ink-soft: #171717;
-  --color-mid-gray: #737373;
-  --color-hairline: #e5e5e5;
-  --color-ember: #e7000b;
+  --color-forest-ink: #0f3e17;
+  --color-sage-mist: #b1dbb8;
+  --color-keylime-wash: #e1f4df;
+  --color-mint-veil: #cfe7d3;
+  --color-slate-hush: #b6ced5;
+  --color-cream-paper: #fffefc;
+  --color-charcoal: #222222;
+  --color-border-mist: #efeeeb;
+  --color-forest-shadow: #0c2f10;
 
   /* Typography — Font Families */
-  --font-geist: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-faire-octave: 'Faire Octave', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-suisse-intl: 'Suisse Intl', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* Typography — Scale */
-  --text-caption: 12px;
-  --leading-caption: 1.33;
-  --tracking-caption: 0.6px;
+  --text-caption: 10px;
+  --leading-caption: 1.61;
+  --tracking-caption: 0px;
   --text-body: 14px;
-  --leading-body: 1.43;
-  --text-body-lg: 16px;
-  --leading-body-lg: 1.5;
+  --leading-body: 1.5;
+  --tracking-body: 0px;
   --text-subheading: 18px;
-  --leading-subheading: 1.56;
-  --text-heading-sm: 24px;
-  --leading-heading-sm: 1.33;
-  --tracking-heading-sm: -0.6px;
-  --text-heading: 30px;
-  --leading-heading: 1.2;
-  --tracking-heading: -0.75px;
-  --text-heading-lg: 36px;
-  --leading-heading-lg: 1.11;
-  --tracking-heading-lg: -0.9px;
-  --text-display: 48px;
-  --leading-display: 1.1;
-  --tracking-display: -2.4px;
+  --leading-subheading: 1.3;
+  --tracking-subheading: 0px;
+  --text-heading-sm: 23px;
+  --leading-heading-sm: 1.5;
+  --tracking-heading-sm: 0px;
+  --text-heading: 40px;
+  --leading-heading: 1.35;
+  --tracking-heading: -0.4px;
+  --text-heading-lg: 56px;
+  --leading-heading-lg: 1.2;
+  --tracking-heading-lg: -1.68px;
+  --text-display: 74px;
+  --leading-display: 1.05;
+  --tracking-display: -2.22px;
 
   /* Typography — Weights */
+  --font-weight-light: 300;
   --font-weight-regular: 400;
-  --font-weight-medium: 500;
   --font-weight-semibold: 600;
 
   /* Spacing */
-  --spacing-unit: 4px;
   --spacing-4: 4px;
-  --spacing-8: 8px;
-  --spacing-12: 12px;
-  --spacing-16: 16px;
-  --spacing-20: 20px;
-  --spacing-24: 24px;
-  --spacing-48: 48px;
+  --spacing-7: 7px;
+  --spacing-9: 9px;
+  --spacing-11: 11px;
+  --spacing-14: 14px;
+  --spacing-18: 18px;
+  --spacing-21: 21px;
+  --spacing-28: 28px;
+  --spacing-35: 35px;
+  --spacing-42: 42px;
+  --spacing-49: 49px;
+  --spacing-56: 56px;
+  --spacing-70: 70px;
+  --spacing-76: 76px;
+  --spacing-99: 99px;
+  --spacing-156: 156px;
 
   /* Layout */
-  --page-max-width: 1280px;
-  --section-gap: 48-80px;
-  --card-padding: 20px;
-  --element-gap: 8px;
+  --page-max-width: 1200px;
+  --section-gap: 64-96px;
+  --card-padding: 28-42px;
+  --element-gap: 14-21px;
 
   /* Border Radius */
-  --radius-md: 6px;
-  --radius-lg: 10px;
-  --radius-xl: 14px;
-  --radius-2xl: 18px;
-  --radius-3xl: 24px;
+  --radius-lg: 7.04px;
+  --radius-xl: 14.08px;
+  --radius-full: 999px;
+  --radius-full-2: 9999px;
 
   /* Named Radii */
-  --radius-cards: 24px;
-  --radius-small: 6px;
-  --radius-badges: 18px;
-  --radius-inputs: 18px;
-  --radius-nested: 10px;
-  --radius-buttons: 18px;
-
-  /* Shadows */
-  --shadow-subtle: oklab(0.145 -0.00000143796 0.00000340492 / 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
-  --shadow-subtle-2: lab(2.75381 0 0) 0px 0px 0px 0px;
+  --radius-nav: 7px;
+  --radius-cards: 14px;
+  --radius-badges: 999px;
+  --radius-buttons: 14px;
+  --radius-sections: 9999px;
 
   /* Surfaces */
-  --surface-canvas: #f5f5f5;
-  --surface-sidebar: #fafafa;
-  --surface-card: #ffffff;
-  --surface-input-fill: #f5f5f5;
+  --surface-cream-paper: #fffefc;
+  --surface-keylime-wash: #e1f4df;
+  --surface-mint-veil: #cfe7d3;
+  --surface-sage-mist: #b1dbb8;
+  --surface-slate-hush: #b6ced5;
 }
 ```
 
@@ -326,59 +326,65 @@ shadcn/ui is built on three principles visible in every token: (1) achromatic by
 ```css
 @theme {
   /* Colors */
-  --color-canvas: #f5f5f5;
-  --color-paper: #ffffff;
-  --color-surface-alt: #fafafa;
-  --color-ink: #0a0a0a;
-  --color-ink-soft: #171717;
-  --color-mid-gray: #737373;
-  --color-hairline: #e5e5e5;
-  --color-ember: #e7000b;
+  --color-forest-ink: #0f3e17;
+  --color-sage-mist: #b1dbb8;
+  --color-keylime-wash: #e1f4df;
+  --color-mint-veil: #cfe7d3;
+  --color-slate-hush: #b6ced5;
+  --color-cream-paper: #fffefc;
+  --color-charcoal: #222222;
+  --color-border-mist: #efeeeb;
+  --color-forest-shadow: #0c2f10;
 
   /* Typography */
-  --font-geist: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-faire-octave: 'Faire Octave', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-suisse-intl: 'Suisse Intl', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* Typography — Scale */
-  --text-caption: 12px;
-  --leading-caption: 1.33;
-  --tracking-caption: 0.6px;
+  --text-caption: 10px;
+  --leading-caption: 1.61;
+  --tracking-caption: 0px;
   --text-body: 14px;
-  --leading-body: 1.43;
-  --text-body-lg: 16px;
-  --leading-body-lg: 1.5;
+  --leading-body: 1.5;
+  --tracking-body: 0px;
   --text-subheading: 18px;
-  --leading-subheading: 1.56;
-  --text-heading-sm: 24px;
-  --leading-heading-sm: 1.33;
-  --tracking-heading-sm: -0.6px;
-  --text-heading: 30px;
-  --leading-heading: 1.2;
-  --tracking-heading: -0.75px;
-  --text-heading-lg: 36px;
-  --leading-heading-lg: 1.11;
-  --tracking-heading-lg: -0.9px;
-  --text-display: 48px;
-  --leading-display: 1.1;
-  --tracking-display: -2.4px;
+  --leading-subheading: 1.3;
+  --tracking-subheading: 0px;
+  --text-heading-sm: 23px;
+  --leading-heading-sm: 1.5;
+  --tracking-heading-sm: 0px;
+  --text-heading: 40px;
+  --leading-heading: 1.35;
+  --tracking-heading: -0.4px;
+  --text-heading-lg: 56px;
+  --leading-heading-lg: 1.2;
+  --tracking-heading-lg: -1.68px;
+  --text-display: 74px;
+  --leading-display: 1.05;
+  --tracking-display: -2.22px;
 
   /* Spacing */
   --spacing-4: 4px;
-  --spacing-8: 8px;
-  --spacing-12: 12px;
-  --spacing-16: 16px;
-  --spacing-20: 20px;
-  --spacing-24: 24px;
-  --spacing-48: 48px;
+  --spacing-7: 7px;
+  --spacing-9: 9px;
+  --spacing-11: 11px;
+  --spacing-14: 14px;
+  --spacing-18: 18px;
+  --spacing-21: 21px;
+  --spacing-28: 28px;
+  --spacing-35: 35px;
+  --spacing-42: 42px;
+  --spacing-49: 49px;
+  --spacing-56: 56px;
+  --spacing-70: 70px;
+  --spacing-76: 76px;
+  --spacing-99: 99px;
+  --spacing-156: 156px;
 
   /* Border Radius */
-  --radius-md: 6px;
-  --radius-lg: 10px;
-  --radius-xl: 14px;
-  --radius-2xl: 18px;
-  --radius-3xl: 24px;
-
-  /* Shadows */
-  --shadow-subtle: oklab(0.145 -0.00000143796 0.00000340492 / 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 1px 3px 0px, rgba(0, 0, 0, 0.1) 0px 1px 2px -1px;
-  --shadow-subtle-2: lab(2.75381 0 0) 0px 0px 0px 0px;
+  --radius-lg: 7.04px;
+  --radius-xl: 14.08px;
+  --radius-full: 999px;
+  --radius-full-2: 9999px;
 }
 ```
