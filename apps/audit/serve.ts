@@ -17,8 +17,9 @@ const facilitator = process.env.FACILITATOR_URL ?? "http://localhost:4020";
 const config = {
   network: mode === "testnet" ? `hedera:${process.env.HEDERA_NETWORK ?? "testnet"}` : "hedera:local",
   mirrorUrl: mode === "testnet" ? (process.env.HEDERA_MIRROR_URL ?? `https://${process.env.HEDERA_NETWORK ?? "testnet"}.mirrornode.hedera.com`) : facilitator,
-  spentTopic: process.env.HEXERA_SPENT_TOPIC_ID ?? null,
-  ledgerTopic: process.env.HEXERA_LEDGER_TOPIC_ID ?? null,
+  // Testnet topic ids only make sense against the testnet mirror; in local mode the page discovers them from the facilitator.
+  spentTopic: mode === "testnet" ? (process.env.HEXERA_SPENT_TOPIC_ID ?? null) : null,
+  ledgerTopic: mode === "testnet" ? (process.env.HEXERA_LEDGER_TOPIC_ID ?? null) : null,
   facilitator,
 };
 
