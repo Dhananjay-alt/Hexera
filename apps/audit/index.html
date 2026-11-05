@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hexera audit — public books from HCS</title>
+<style>
+  :root { --bg:#0d1117; --panel:#151b23; --line:#2a313c; --text:#e6edf3; --muted:#8b949e; --ok:#7ee787; --err:#ff7b72; --accent:#7ee0c3; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family: ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 1180px; margin: 0 auto; padding: 28px 24px; }
+  h1 { margin:0; font-size:26px; } h1 span { color: var(--accent); font-weight:500; }
+  h2 { font-size:16px; margin: 28px 0 10px; }
+  p { color: var(--muted); }
+  .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap:12px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .card .n { font-size:24px; font-weight:600; }
+  .card .l { font-size:12px; color:var(--muted); }
+  table { width:100%; border-collapse:collapse; font-size:13px; background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight:500; }
+  td.mono, .mono { font-family: ui-monospace, Menlo, monospace; font-size:12px; word-break: break-all; }
+  .ok { color: var(--ok); } .err { color: var(--err); }
+  a { color: #5b8cff; }
+  .checks div { margin: 4px 0; }
+  .muted { color: var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Hexera <span>audit</span></h1>
+  <p>Everything on this page is rebuilt from two public HCS topics on the mirror node. Nothing here comes from the facilitator's database.</p>
+  <div id="src" class="muted"></div>
+  <h2>Books</h2>
+  <div class="cards" id="cards"></div>
+  <h2>Checks anyone can run</h2>
+  <div class="checks" id="checks"></div>
+  <h2>Merchants: burned on hexera-spent vs paid out</h2>
+  <table id="merchants"></table>
+  <h2>Epoch keys (clients refuse keys not listed here)</h2>
+  <table id="keys"></table>
+  <h2>Payout batches</h2>
+  <table id="payouts"></table>
+  <h2>Latest spent messages <span class="muted">(no payer field exists)</span></h2>
+  <table id="spent"></table>
+</main>
+<script src="/audit.js"></script>
+</body>
+</html>

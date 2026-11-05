@@ -1,0 +1,8 @@
+{
+  "name": "@hexera/audit",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": { "start": "tsx serve.ts" }
+}
