@@ -71,3 +71,31 @@ export class TestnetBackend implements HederaBackend {
     this.client.close();
   }
 }
+
+/**
+ * A user's own deposit: an HTS transfer to the Hexera treasury, signed with
+ * the user's key. Used by Node agents and the demo script; in a browser this
+ * is a wallet (HashPack etc.) signing the same TransferTransaction.
+ */
+export async function userDeposit(opts: {
+  network: "testnet" | "mainnet";
+  accountId: string;
+  privateKey: string;
+  tokenId: string;
+  treasury: string;
+  amountBase: bigint;
+}): Promise<string> {
+  const client = opts.network === "mainnet" ? Client.forMainnet() : Client.forTestnet();
+  try {
+    client.setOperator(AccountId.fromString(opts.accountId), parsePrivateKey(opts.privateKey));
+    const resp = await new TransferTransaction()
+      .addTokenTransfer(TokenId.fromString(opts.tokenId), opts.accountId, -Number(opts.amountBase))
+      .addTokenTransfer(TokenId.fromString(opts.tokenId), opts.treasury, Number(opts.amountBase))
+      .setTransactionMemo("hexera deposit")
+      .execute(client);
+    await resp.getReceipt(client);
+    return resp.transactionId.toString();
+  } finally {
+    client.close();
+  }
+}
