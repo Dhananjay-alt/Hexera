@@ -114,8 +114,26 @@ export class Facilitator {
         .prepare("INSERT INTO merchants (id, account, name) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET account = excluded.account, name = excluded.name")
         .run(m.id, m.account!, m.name);
     }
-    await this.currentKey();
     await this.syncSpent().catch((e) => this.log.warn(`spent-topic sync failed: ${e.message}`));
+    const onHcs = await this.syncLedger().catch((e) => {
+      this.log.warn(`ledger-topic sync failed: ${e.message}`);
+      return null;
+    });
+    const key = (await this.keys.current()).key;
+    // Trust the public topic, not a local flag: clients refuse keys that aren't on HCS.
+    if (onHcs && !onHcs.has(key.publicKeyB64)) this.db.db.prepare("DELETE FROM kv WHERE k = ?").run(`key_published:${key.epoch}`);
+    await this.currentKey();
+  }
+
+  /** Read hexera-ledger and return the epoch keys published there. */
+  async syncLedger(): Promise<Set<string>> {
+    const msgs = await this.backend.mirror.getTopicMessages(this.ids.ledgerTopic, 0);
+    const keys = new Set<string>();
+    for (const m of msgs) {
+      const d = decodeMessage<LedgerMessage>(m);
+      if (d?.t === "epoch_key") keys.add(d.publicKey);
+    }
+    return keys;
   }
 
   // ---------------------------------------------------------------- ledger

@@ -165,3 +165,19 @@ test("books balance: issued <= credited, treasury covers outstanding vouchers", 
   const outstanding = BigInt(b.unitsIssued - b.unitsSpent) * 1000n;
   assert.ok(BigInt(b.treasuryBalanceBase!) >= outstanding);
 });
+
+test("a stale 'key published' flag can't hide the key: it is re-published if missing from HCS", async () => {
+  const dir2 = mkdtempSync(join(tmpdir(), "hexera-stale-"));
+  try {
+    const cfg2 = loadConfig({ HEXERA_MODE: "local", HEXERA_DATA_DIR: dir2 });
+    const { Db } = await import("../src/db");
+    const epoch = Math.floor(Date.now() / 1000 / cfg2.epochSeconds);
+    new Db(join(cfg2.dataDir, "facilitator.sqlite")).set(`key_published:${epoch}`, "1"); // left over, but the topic is empty
+    const f3 = await Facilitator.create(cfg2, silent);
+    const keys = await f3.syncLedger();
+    assert.equal(keys.size, 1, "epoch key is on hexera-ledger");
+    await f3.close();
+  } finally {
+    rmSync(dir2, { recursive: true, force: true });
+  }
+});

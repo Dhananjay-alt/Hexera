@@ -85,6 +85,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): FacilitatorCon
       }),
   };
 
+  // Keep state for different ledgers apart: a flag or cache from local mode must never leak into testnet.
+  cfg.dataDir = resolve(cfg.dataDir, mode === "local" ? "local" : `${cfg.network}-${cfg.treasuryAccountId ?? "unset"}`);
+
   if (mode === "testnet") {
     const missing = (
       ["operatorId", "operatorKey", "treasuryAccountId", "tokenId", "spentTopicId", "ledgerTopicId"] as const
