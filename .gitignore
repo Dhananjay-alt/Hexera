@@ -1,0 +1,9 @@
+node_modules/
+.next/
+dist/
+data/
+.env
+.env.local
+*.sqlite
+*.sqlite-*
+next-env.d.ts

@@ -1,0 +1,29 @@
+{
+  "name": "hexera",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Private x402 payments on Hedera with blind-signed ecash vouchers",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "facilitator": "tsx packages/facilitator/src/main.ts",
+    "publisher:a": "PUBLISHER=daily-ledger PORT=4021 tsx apps/publisher/src/main.ts",
+    "publisher:b": "PUBLISHER=quant-feed PORT=4022 tsx apps/publisher/src/main.ts",
+    "reader": "npm run dev -w @hexera/reader",
+    "audit": "tsx apps/audit/serve.ts",
+    "dev": "concurrently -n fac,pubA,pubB,reader,audit -c blue,green,magenta,cyan,yellow \"npm:facilitator\" \"npm:publisher:a\" \"npm:publisher:b\" \"npm:reader\" \"npm:audit\"",
+    "demo": "tsx scripts/demo-e2e.ts",
+    "setup:testnet": "tsx scripts/setup-testnet.ts",
+    "smoke:blindrsa": "tsx scripts/blindrsa-smoke.ts",
+    "test": "tsx --test packages/*/test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
